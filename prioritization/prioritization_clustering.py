@@ -8,8 +8,8 @@ from sklearn.preprocessing import Normalizer
 from prioritization import prioritization_std as ps
 
 
-def clustering5(coverage, cluster_num):
-    print("Running agglomerative clustering (cluster_num = %d)..." % cluster_num)
+def clustering_agg(coverage, linkage, cluster_num):
+    print("Running agglomerative clustering (cluster_num = %d, linkage = %s)..." % (cluster_num, linkage))
 #    coverage_normalized = Normalizer().transform(coverage)
 #    connectivity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
 #    conn_eps = 0.1
@@ -17,9 +17,23 @@ def clustering5(coverage, cluster_num):
 #    connectivity[connectivity <= conn_eps] = 0
 
     clustering = AgglomerativeClustering(n_clusters=cluster_num,
-                                         linkage='average').fit(coverage)
+                                         linkage=linkage).fit(coverage)
     print("Clustering finished.")
     return clustering
+
+
+def create_clusters(coverage, clustering_method, cluster_num):
+    unit_num = coverage.shape[1]
+
+    clustering = clustering_method(coverage, cluster_num)
+    total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
+
+    # constructing the clusters
+    clusters = [[] for c in range(0, cluster_num)]
+    for (index, val) in enumerate(clustering.labels_):
+        clusters[val].append((index, total_weighted_coverage[index]))
+
+    return clusters, clustering
 
 
 def tcp_full_total(clusters, test_num):
@@ -165,15 +179,4 @@ def compute_ordering_index(ordering):
     return ordering_index
 
 
-def create_clusters5(coverage, cluster_num):
-    unit_num = coverage.shape[1]
 
-    clustering = clustering5(coverage, cluster_num)
-    total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
-
-    # constructing the clusters
-    clusters = [[] for c in range(0, cluster_num)]
-    for (index, val) in enumerate(clustering.labels_):
-        clusters[val].append((index, total_weighted_coverage[index]))
-
-    return clusters, clustering

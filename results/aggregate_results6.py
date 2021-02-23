@@ -70,7 +70,7 @@ def main():
 
 
     for index, project in enumerate(projects):
-        first_fail, apfd = read_results(['clfp5_agg200.csv', 'clfp5_agg200_c0.csv'],
+        first_fail, apfd = read_results(['clfp5_agg200.csv', 'clfp5_agg200_c0.csv', 'clfp6_agg200.csv'],
                                         project, from_version[index], to_version[index] + 1)
 
         plt.close('all')
