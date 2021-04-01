@@ -22,7 +22,7 @@ def alg_to_char(alg_type):
     return alg_type[0]
 
 
-def run_prioritization_clustering_fp5(bug_prediction_data, project, version_number, cluster_num, c_dp_values, filename, alg_prefix):
+def run_prioritization_clustering_fp(bug_prediction_data, project, version_number, clustering_method, cluster_num, c_dp_values, filename, alg_prefix):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
@@ -38,7 +38,7 @@ def run_prioritization_clustering_fp5(bug_prediction_data, project, version_numb
     f = open('%s/%s' % (data_path, filename), "w+")
     f.write("alg,first_fail,apfd\n")
 
-    clusters, clustering = pr_cl.create_clusters5(coverage, cluster_num)
+    clusters, clustering = pr_cl.create_clusters(coverage, dp_unit_prob, clustering_method, cluster_num)
 
     for ind, c_dp in enumerate(c_dp_values):
         unit_fp = generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num)

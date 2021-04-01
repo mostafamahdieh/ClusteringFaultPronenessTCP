@@ -8,16 +8,48 @@ from sklearn.preprocessing import Normalizer
 from prioritization import prioritization_std as ps
 
 
-def clustering5(coverage, cluster_num):
+def clustering_agg_cos_conn(coverage, dp_unit_prob, cluster_num):
     print("Running agglomerative clustering (cluster_num = %d)..." % cluster_num)
-#    coverage_normalized = Normalizer().transform(coverage)
-#    connectivity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
-#    conn_eps = 0.1
+    coverage_normalized = Normalizer().transform(coverage)
+
+    similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
+    conn_eps = 0.01
+    inf = 1.0e6
+#    connectivity = similarity.copy()
 #    connectivity[connectivity > conn_eps] = 1
 #    connectivity[connectivity <= conn_eps] = 0
 
-    clustering = AgglomerativeClustering(n_clusters=cluster_num,
-                                         linkage='average').fit(coverage)
+    distance = 1-similarity
+
+    total_weighted_coverage = np.matmul(coverage, dp_unit_prob)
+    total_sorted_arg = np.argsort(total_weighted_coverage)
+    cluster_subset_maxsize = math.floor(cluster_num / 2)
+    total_sorted_arg_subset = total_sorted_arg[::-1][:cluster_subset_maxsize]
+    fp_eps = 2.0
+
+    if total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]] >= fp_eps:
+        cluster_subset_num = cluster_subset_maxsize
+    else:
+        cluster_subset_num = np.argmax(total_weighted_coverage[total_sorted_arg_subset] >= fp_eps)
+
+    total_sorted_arg_subset_final = total_sorted_arg_subset[:cluster_subset_num]
+
+    print("coverage shape: ", np.shape(coverage))
+    print("similarity shape: ", np.shape(similarity))
+    print("distance shape: ", np.shape(distance))
+    print("total_weighted_coverage shape: ", np.shape(total_weighted_coverage))
+    print("number of total_weighted_coverage >= ", fp_eps, ": ", np.sum(total_weighted_coverage >= fp_eps))
+    print("cluster_subset_maxsize: ", cluster_subset_maxsize)
+    print("total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]]: ",
+          total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]])
+    print("cluster_subset_num: ", cluster_subset_num)
+
+    for i in total_sorted_arg_subset_final:
+        for j in total_sorted_arg_subset_final:
+            distance[i, j] = inf
+
+    clustering = AgglomerativeClustering(n_clusters=cluster_num, linkage='average',
+                                         affinity='precomputed').fit(distance)
     print("Clustering finished.")
     return clustering
 
@@ -165,10 +197,10 @@ def compute_ordering_index(ordering):
     return ordering_index
 
 
-def create_clusters5(coverage, cluster_num):
+def create_clusters(coverage, dp_unit_prob, clustering_method, cluster_num):
     unit_num = coverage.shape[1]
 
-    clustering = clustering5(coverage, cluster_num)
+    clustering = clustering_method(coverage, dp_unit_prob, cluster_num)
     total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
 
     # constructing the clusters
