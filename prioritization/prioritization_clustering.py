@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.cluster import KMeans
+from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster import AgglomerativeClustering
 import operator
 import math
@@ -11,34 +12,35 @@ from prioritization import prioritization_std as ps
 def clustering_agg1(coverage, dp_unit_prob, cluster_num):
     print("Running agglomerative clustering (cluster_num = %d)..." % cluster_num)
     coverage_normalized = Normalizer().transform(coverage)
-
     similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
-    conn_eps = 0.01
-    inf = 1.0e6
+    distance = 1-similarity
+
+#    distance = euclidean_distances(coverage, coverage)
+
+#    conn_eps = 0.01
 #    connectivity = similarity.copy()
 #    connectivity[connectivity > conn_eps] = 1
 #    connectivity[connectivity <= conn_eps] = 0
 
-    distance = 1-similarity
 
+    inf = 1.0e6
+    fp_big_threshold = 2.0
     total_weighted_coverage = np.matmul(coverage, dp_unit_prob)
     total_sorted_arg = np.argsort(total_weighted_coverage)
     cluster_subset_maxsize = math.floor(cluster_num / 2)
     total_sorted_arg_subset = total_sorted_arg[::-1][:cluster_subset_maxsize]
-    fp_eps = 2.0
 
-    if total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]] >= fp_eps:
+    if total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]] >= fp_big_threshold:
         cluster_subset_num = cluster_subset_maxsize
     else:
-        cluster_subset_num = np.argmax(total_weighted_coverage[total_sorted_arg_subset] >= fp_eps)
+        cluster_subset_num = np.argmax(total_weighted_coverage[total_sorted_arg_subset] >= fp_big_threshold)
 
     total_sorted_arg_subset_final = total_sorted_arg_subset[:cluster_subset_num]
 
     print("coverage shape: ", np.shape(coverage))
-    print("similarity shape: ", np.shape(similarity))
     print("distance shape: ", np.shape(distance))
     print("total_weighted_coverage shape: ", np.shape(total_weighted_coverage))
-    print("number of total_weighted_coverage >= ", fp_eps, ": ", np.sum(total_weighted_coverage >= fp_eps))
+    print("number of total_weighted_coverage >= ", fp_big_threshold, ": ", np.sum(total_weighted_coverage >= fp_big_threshold))
     print("cluster_subset_maxsize: ", cluster_subset_maxsize)
     print("total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]]: ",
           total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]])
