@@ -54,6 +54,20 @@ def clustering_agg_cos_conn(coverage, dp_unit_prob, cluster_num):
     return clustering
 
 
+def create_clusters(coverage, clustering_method, cluster_num):
+    unit_num = coverage.shape[1]
+
+    clustering = clustering_method(coverage, cluster_num)
+    total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
+
+    # constructing the clusters
+    clusters = [[] for c in range(0, cluster_num)]
+    for (index, val) in enumerate(clustering.labels_):
+        clusters[val].append((index, total_weighted_coverage[index]))
+
+    return clusters, clustering
+
+
 def tcp_full_total(clusters, test_num):
     for cluster_ind in range(0, len(clusters)):
         clusters[cluster_ind].sort(key=operator.itemgetter(1), reverse=True)  # sort by second value of tuple
@@ -208,4 +222,3 @@ def create_clusters(coverage, dp_unit_prob, clustering_method, cluster_num):
     for (index, val) in enumerate(clustering.labels_):
         clusters[val].append((index, total_weighted_coverage[index]))
 
-    return clusters, clustering
