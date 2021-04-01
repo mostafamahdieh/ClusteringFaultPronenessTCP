@@ -8,7 +8,7 @@ from sklearn.preprocessing import Normalizer
 from prioritization import prioritization_std as ps
 
 
-def clustering_agg_cos_conn(coverage, dp_unit_prob, cluster_num):
+def clustering_agg1(coverage, dp_unit_prob, cluster_num):
     print("Running agglomerative clustering (cluster_num = %d)..." % cluster_num)
     coverage_normalized = Normalizer().transform(coverage)
 
@@ -222,3 +222,4 @@ def create_clusters(coverage, dp_unit_prob, clustering_method, cluster_num):
     for (index, val) in enumerate(clustering.labels_):
         clusters[val].append((index, total_weighted_coverage[index]))
 
+    return clusters, clustering
