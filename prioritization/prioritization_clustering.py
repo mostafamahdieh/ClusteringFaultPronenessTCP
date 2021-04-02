@@ -30,13 +30,6 @@ def clustering_agg2(coverage, dp_unit_prob, cluster_num):
     cluster_subset_maxsize = math.floor(cluster_num / 2)
     total_sorted_arg_subset = total_sorted_arg[::-1][:cluster_subset_maxsize]
 
-    if total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]] >= fp_big_threshold:
-        cluster_subset_num = cluster_subset_maxsize
-    else:
-        cluster_subset_num = np.argmax(total_weighted_coverage[total_sorted_arg_subset] < fp_big_threshold)
-
-    total_sorted_arg_subset_final = total_sorted_arg_subset[:cluster_subset_num]
-
     print("coverage shape: ", np.shape(coverage))
     print("distance shape: ", np.shape(distance))
     print("total_weighted_coverage shape: ", np.shape(total_weighted_coverage))
@@ -44,6 +37,16 @@ def clustering_agg2(coverage, dp_unit_prob, cluster_num):
     print("cluster_subset_maxsize: ", cluster_subset_maxsize)
     print("total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]]: ",
           total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]])
+
+    if total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]] >= fp_big_threshold:
+        print("using all total_sorted_arg_subset")
+        cluster_subset_num = cluster_subset_maxsize
+    else:
+        cluster_subset_num = np.argmax(total_weighted_coverage[total_sorted_arg_subset] < fp_big_threshold)
+        print("using first ", cluster_subset_num, " of total_sorted_arg_subset")
+
+    total_sorted_arg_subset_final = total_sorted_arg_subset[:cluster_subset_num]
+
     print("cluster_subset_num: ", cluster_subset_num)
 
     for i in total_sorted_arg_subset_final:
