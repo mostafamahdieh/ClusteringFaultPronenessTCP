@@ -9,13 +9,13 @@ from sklearn.preprocessing import Normalizer
 from prioritization import prioritization_std as ps
 
 
-def clustering_agg1(coverage, dp_unit_prob, cluster_num):
+def clustering_agg2(coverage, dp_unit_prob, cluster_num):
     print("Running agglomerative clustering (cluster_num = %d)..." % cluster_num)
-    coverage_normalized = Normalizer().transform(coverage)
-    similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
-    distance = 1-similarity
+#    coverage_normalized = Normalizer().transform(coverage)
+#    similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
+#    distance = 1-similarity
 
-#    distance = euclidean_distances(coverage, coverage)
+    distance = euclidean_distances(coverage, coverage)
 
 #    conn_eps = 0.01
 #    connectivity = similarity.copy()
@@ -33,7 +33,7 @@ def clustering_agg1(coverage, dp_unit_prob, cluster_num):
     if total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]] >= fp_big_threshold:
         cluster_subset_num = cluster_subset_maxsize
     else:
-        cluster_subset_num = np.argmax(total_weighted_coverage[total_sorted_arg_subset] >= fp_big_threshold)
+        cluster_subset_num = np.argmax(total_weighted_coverage[total_sorted_arg_subset] < fp_big_threshold)
 
     total_sorted_arg_subset_final = total_sorted_arg_subset[:cluster_subset_num]
 
