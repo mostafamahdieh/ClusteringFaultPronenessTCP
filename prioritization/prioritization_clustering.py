@@ -28,29 +28,23 @@ def clustering_agg2(coverage, dp_unit_prob, cluster_num):
     total_weighted_coverage = np.matmul(coverage, dp_unit_prob)
     total_sorted_arg = np.argsort(total_weighted_coverage)
     cluster_subset_maxsize = math.floor(cluster_num / 2)
-    total_sorted_arg_subset = total_sorted_arg[::-1][:cluster_subset_maxsize]
+    total_sorted_arg_des = total_sorted_arg[::-1]
 
     print("coverage shape: ", np.shape(coverage))
     print("distance shape: ", np.shape(distance))
     print("total_weighted_coverage shape: ", np.shape(total_weighted_coverage))
     print("number of total_weighted_coverage >= ", fp_big_threshold, ": ", np.sum(total_weighted_coverage >= fp_big_threshold))
     print("cluster_subset_maxsize: ", cluster_subset_maxsize)
-    print("total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]]: ",
-          total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]])
+    print("total_weighted_coverage[total_sorted_des[", cluster_subset_maxsize-1, "]]: ",
+          total_weighted_coverage[total_sorted_arg_des[cluster_subset_maxsize-1]])
 
-    if total_weighted_coverage[total_sorted_arg_subset[cluster_subset_maxsize-1]] >= fp_big_threshold:
-        print("using all total_sorted_arg_subset")
-        cluster_subset_num = cluster_subset_maxsize
-    else:
-        cluster_subset_num = np.argmax(total_weighted_coverage[total_sorted_arg_subset] < fp_big_threshold)
-        print("using first ", cluster_subset_num, " of total_sorted_arg_subset")
-
-    total_sorted_arg_subset_final = total_sorted_arg_subset[:cluster_subset_num]
-
+    cluster_subset_num = math.min(np.sum(total_weighted_coverage >= fp_big_threshold), cluster_subset_maxsize)
     print("cluster_subset_num: ", cluster_subset_num)
 
-    for i in total_sorted_arg_subset_final:
-        for j in total_sorted_arg_subset_final:
+    total_sorted_arg_des_subset = total_sorted_arg_des[:cluster_subset_num]
+
+    for i in total_sorted_arg_des_subset:
+        for j in total_sorted_arg_des_subset:
             distance[i, j] = inf
 
     clustering = AgglomerativeClustering(n_clusters=cluster_num, linkage='average',
