@@ -42,7 +42,7 @@ def clustering_agg1(coverage, dp_unit_prob, cluster_num):
         print("using all total_sorted_arg_subset")
         cluster_subset_num = cluster_subset_maxsize
     else:
-        cluster_subset_num = np.argmax(total_weighted_coverage[total_sorted_arg_subset] <>=> fp_big_threshold)
+        cluster_subset_num = np.argmax(total_weighted_coverage[total_sorted_arg_subset] < fp_big_threshold)
         print("using first ", cluster_subset_num, " of total_sorted_arg_subset")
 
     total_sorted_arg_subset_final = total_sorted_arg_subset[:cluster_subset_num]
