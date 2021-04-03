@@ -9,13 +9,13 @@ from sklearn.preprocessing import Normalizer
 from prioritization import prioritization_std as ps
 
 
-def clustering_agg3(coverage, dp_unit_prob, cluster_num):
+def clustering_agg4(coverage, dp_unit_prob, cluster_num):
     print("Running agglomerative clustering (cluster_num = %d)..." % cluster_num)
-#    coverage_normalized = Normalizer().transform(coverage)
-#    similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
-#    distance = 1-similarity
+    coverage_normalized = Normalizer().transform(coverage)
+    similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
+    distance = 1-similarity
 
-    distance = euclidean_distances(coverage, coverage)
+#    distance = euclidean_distances(coverage, coverage)
 
 #    conn_eps = 0.01
 #    connectivity = similarity.copy()
