@@ -9,7 +9,7 @@ from sklearn.preprocessing import Normalizer
 from prioritization import prioritization_std as ps
 
 
-def clustering_agg5(coverage, dp_unit_prob, cluster_num):
+def clustering_agg12(coverage, dp_unit_prob, cluster_num):
     print("Running agglomerative clustering (cluster_num = %d)..." % cluster_num)
     coverage_normalized = Normalizer().transform(coverage)
     similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
@@ -27,7 +27,7 @@ def clustering_agg5(coverage, dp_unit_prob, cluster_num):
     fp_big_threshold = 0.2
     total_weighted_coverage = np.matmul(coverage, dp_unit_prob)
     total_sorted_arg = np.argsort(total_weighted_coverage)
-    cluster_subset_maxsize = math.floor(cluster_num / 2)
+    cluster_subset_maxsize = math.floor(cluster_num)
     total_sorted_arg_des = total_sorted_arg[::-1]
 
     print("coverage shape: ", np.shape(coverage))

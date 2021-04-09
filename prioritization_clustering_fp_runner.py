@@ -1,10 +1,13 @@
 import pandas as pd
 from prioritization.prioritization_manager import run_prioritization_clustering_fp
-from prioritization.prioritization_clustering import clustering_agg5
+from prioritization.prioritization_clustering import clustering_agg12
 
-projects = ['Time', 'Chart', 'Math', 'Lang', 'Closure']
-from_version = [1, 1, 1, 1, 1]
-to_version = [14, 13, 50, 33, 50]
+#projects = ['Time', 'Chart', 'Math', 'Lang', 'Closure']
+#from_version = [1, 1, 1, 1, 1]
+#to_version = [14, 13, 50, 33, 50]
+projects = ['Math', 'Lang', 'Closure']
+from_version = [1, 1, 1]
+to_version = [50, 33, 50]
 
 
 index = 0
@@ -16,8 +19,8 @@ for project in projects:
     print("done.")
     for version_number in range(from_version[index], to_version[index] + 1):
         print("* Version %d" % version_number)
-        run_prioritization_clustering_fp(bug_prediction_data, project, version_number, clustering_agg5, 200,
-                                         [0, 0.999], 'agg4_200.csv',
-                                         ['agg5_200_c0', 'agg5_200_c0999'])
+        run_prioritization_clustering_fp(bug_prediction_data, project, version_number, clustering_agg12, 200,
+                                         [0, 0.999], 'agg12_200.csv',
+                                         ['agg12_200_c0', 'agg12_200_c0999'])
         print()
     index = index + 1
