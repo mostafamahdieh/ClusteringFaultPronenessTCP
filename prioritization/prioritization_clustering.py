@@ -4,18 +4,25 @@ from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster import AgglomerativeClustering
 import operator
 import math
+
+from sklearn.neighbors._dist_metrics import DistanceMetric
 from sklearn.preprocessing import Normalizer
 
 from prioritization import prioritization_std as ps
 
 
-def clustering_agg12(coverage, dp_unit_prob, cluster_num):
+def clustering_agg13(coverage, dp_unit_prob, distance_metric, cluster_num):
     print("Running agglomerative clustering (cluster_num = %d)..." % cluster_num)
-    coverage_normalized = Normalizer().transform(coverage)
-    similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
-    distance = 1-similarity
 
-#    distance = euclidean_distances(coverage, coverage)
+    coverage_eps = 0.1
+    coverage_binary = coverage > coverage_eps
+
+#    coverage_normalized = Normalizer().transform(coverage)
+#    similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
+#    distance = 1-similarity
+
+    dist = DistanceMetric.get_metric(distance_metric)
+    distance = dist.pairwise(coverage_binary, coverage_binary)
 
 #    conn_eps = 0.01
 #    connectivity = similarity.copy()
@@ -210,10 +217,10 @@ def compute_ordering_index(ordering):
     return ordering_index
 
 
-def create_clusters(coverage, dp_unit_prob, clustering_method, cluster_num):
+def create_clusters(coverage, dp_unit_prob, clustering_method, distance_metric, cluster_num):
     unit_num = coverage.shape[1]
 
-    clustering = clustering_method(coverage, dp_unit_prob, cluster_num)
+    clustering = clustering_method(coverage, dp_unit_prob, distance_metric, cluster_num)
     total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
 
     # constructing the clusters
