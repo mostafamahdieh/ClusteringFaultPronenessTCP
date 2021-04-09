@@ -16,9 +16,8 @@ for project in projects:
     print("done.")
     for version_number in range(from_version[index], to_version[index] + 1):
         print("* Version %d" % version_number)
-        for distance_metric in ['jaccard', 'matching', 'dice', 'kulsinski', 'rogerstanimoto', 'russellrao', 'sokalmichener', 'sokalsneath']:
-            run_prioritization_clustering_fp(bug_prediction_data, project, version_number, clustering_agg13, distance_metric, 200,
+        run_prioritization_clustering_fp(bug_prediction_data, project, version_number, clustering_agg13, 200,
                                          [0.999], 'agg13_200.csv',
-                                         ['a13_%s' % distance_metric])
+                                         ['a13'])
         print()
     index = index + 1

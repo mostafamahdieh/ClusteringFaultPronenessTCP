@@ -5,14 +5,14 @@ from sklearn.cluster import AgglomerativeClustering
 import operator
 import math
 
-from sklearn.neighbors._dist_metrics import DistanceMetric
+from sklearn.neighbors import DistanceMetric
 from sklearn.preprocessing import Normalizer
 
 from prioritization import prioritization_std as ps
 
 
 def clustering_agg13(coverage, dp_unit_prob, distance_metric, cluster_num):
-    print("Running agglomerative clustering (cluster_num = %d)..." % cluster_num)
+    print("Running agglomerative clustering (distance_metric = %s, cluster_num = %d)..." % (distance_metric, cluster_num))
 
     coverage_eps = 0.1
     coverage_binary = coverage > coverage_eps
