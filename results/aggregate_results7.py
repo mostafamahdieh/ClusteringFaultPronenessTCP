@@ -54,9 +54,15 @@ def read_results(file_names, project, from_version, to_version):
 
 
 def main():
-    projects = ['Time', 'Chart', 'Math', 'Lang', 'Closure']
+    projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
     from_version = [1, 1, 1, 1, 1]
-    to_version = [14, 13, 50, 33, 50]
+    to_version = [26, 119, 65, 106, 26]
+    #projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
+    #from_version = [1, 1, 1, 1, 1]
+    #to_version = [13, 50, 33, 50, 14]
+    #projects = ['Time', 'Chart', 'Math', 'Lang', 'Closure']
+    #from_version = [1, 1, 1, 1, 1]
+    #to_version = [14, 13, 50, 33, 50]
 
 
     results_path = '../../WTP-data/aggregate'
@@ -70,7 +76,7 @@ def main():
 
 
     for index, project in enumerate(projects):
-        first_fail, apfd = read_results(['agg12_200.csv'],
+        first_fail, apfd = read_results(['agg11_cx_200.csv'],
                                         project, from_version[index], to_version[index] + 1)
 
         plt.close('all')

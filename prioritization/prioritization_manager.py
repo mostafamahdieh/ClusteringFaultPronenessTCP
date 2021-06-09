@@ -38,8 +38,7 @@ def run_prioritization_clustering_fp(bug_prediction_data, project, version_numbe
     f = open('%s/%s' % (data_path, filename), "w+")
     f.write("alg,first_fail,apfd\n")
 
-    for distance_metric in ['jaccard', 'matching', 'dice', 'kulsinski', 'rogerstanimoto', 'russellrao', 'sokalmichener',
-                            'sokalsneath']:
+    for distance_metric in ['dice']:
 
         clusters, clustering = pr_cl.create_clusters(coverage, dp_unit_prob, clustering_method, distance_metric, cluster_num)
 
@@ -53,7 +52,7 @@ def run_prioritization_clustering_fp(bug_prediction_data, project, version_numbe
                     apfd = pc.rank_evaluation_apfd(ranks, failed_tests_ids)
                     print("first_fail: ", first_fail, " apfd: ", apfd)
 
-                    result_line = "%s_%s_%s%s,%f,%f" % (alg_prefix[ind], distance_metric, alg_to_char(inner_alg), alg_to_char(outer_alg), first_fail, apfd)
+                    result_line = "%s_%s%s,%f,%f" % (alg_prefix[ind], alg_to_char(inner_alg), alg_to_char(outer_alg), first_fail, apfd)
 
                     f.write(result_line + "\n")
 

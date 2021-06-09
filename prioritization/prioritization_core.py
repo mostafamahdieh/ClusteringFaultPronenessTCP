@@ -56,7 +56,7 @@ def read_coverage_data(dataPath):
         with zipfile.ZipFile(zip_file_name, 'r') as zip_ref:
             zip_ref.extractall(dataPath)
 
-    h5 = h5py.File(h5_file_address)
+    h5 = h5py.File(h5_file_address, 'r')
 
     data_size = h5["data"].shape[0]
     test_names = h5["columnTestNamesArray"]
