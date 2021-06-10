@@ -35,7 +35,7 @@ def run_standard2_prioritization(bug_prediction_data, project, version_number, c
         print("No Tests found in coverage values, skipping version")
         return
 
-    f = open('%s/std_fp.csv' % data_path, "w+")
+    f = open('%s/%s' % (data_path, filename), "w+")
     #    f.write(
     #        "additional_first_fail,additional_apfd,total_first_fail,total_apfd,additional_dp_first_fail,additional_dp_apfd,"
     #        "total_dp_first_fail,total_dp_apfd")
