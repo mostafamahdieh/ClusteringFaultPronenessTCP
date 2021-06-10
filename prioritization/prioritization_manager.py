@@ -22,6 +22,57 @@ def alg_to_char(alg_type):
     return alg_type[0]
 
 
+def run_standard2_prioritization(bug_prediction_data, project, version_number, c_dp_values, filename, alg_prefix):
+    data_path = "../WTP-data/%s/%d" % (project, version_number)
+
+    coverage, test_names, unit_names = pc.read_coverage_data(data_path)
+    failed_tests_ids = pc.read_failed_tests(data_path, test_names)
+    unit_num = coverage.shape[1]
+
+    dp_unit_prob = extract_bug_prediction_for_units_version(bug_prediction_data, version_number, unit_names, unit_num)
+
+    if np.size(failed_tests_ids) == 0:
+        print("No Tests found in coverage values, skipping version")
+        return
+
+    f = open('%s/std_fp.csv' % data_path, "w+")
+    #    f.write(
+    #        "additional_first_fail,additional_apfd,total_first_fail,total_apfd,additional_dp_first_fail,additional_dp_apfd,"
+    #        "total_dp_first_fail,total_dp_apfd")
+
+    f.write("alg,first_fail,apfd\n")
+
+    for ind, c_dp in enumerate(c_dp_values):
+        print("* Running for c_dp: ", c_dp)
+        unit_fp = generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num)
+
+        additional_ordering = \
+            ps.additional_prioritization_std(coverage, unit_fp, 'decrease')
+        additional_apfd = pc.rank_evaluation_apfd(additional_ordering, failed_tests_ids)
+        print("additional_apfd: ", additional_apfd)
+
+        additional_first_fail = \
+            pc.rank_evaluation_first_fail(additional_ordering, failed_tests_ids)
+        print("additional_first_fail: ", additional_first_fail)
+
+        result_line = "add_%s,%f,%f" % (alg_prefix[ind], additional_first_fail, additional_apfd)
+        f.write(result_line + "\n")
+
+        total_prioritization_ordering = ps.total_prioritization(coverage, unit_fp)
+
+        total_prioritization_apfd = pc.rank_evaluation_apfd(total_prioritization_ordering, failed_tests_ids)
+        print("total_prioritization_apfd: ", total_prioritization_apfd)
+
+        total_prioritization_first_fail = pc.rank_evaluation_first_fail(total_prioritization_ordering, failed_tests_ids)
+        print("total_prioritization_first_fail: ", total_prioritization_first_fail)
+
+        result_line = "tot_%s,%f,%f" % (alg_prefix[ind], total_prioritization_first_fail, total_prioritization_apfd)
+        f.write(result_line + "\n")
+
+    print()
+    f.close()
+
+
 def run_prioritization_clustering_fp(bug_prediction_data, project, version_number, clustering_method, cluster_num, c_dp_values, filename, alg_prefix):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
