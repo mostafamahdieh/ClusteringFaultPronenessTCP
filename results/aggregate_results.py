@@ -54,39 +54,30 @@ def read_results(file_names, project, from_version, to_version):
 
 
 def main():
+#    projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
+#    from_version = [1, 1, 1, 1, 1]
+#    to_version = [26, 119, 65, 106, 26]
     projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
     from_version = [1, 1, 1, 1, 1]
-    to_version = [26, 119, 65, 106, 26]
-    #projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
-    #from_version = [1, 1, 1, 1, 1]
-    #to_version = [13, 50, 33, 50, 14]
-    #projects = ['Time', 'Chart', 'Math', 'Lang', 'Closure']
-    #from_version = [1, 1, 1, 1, 1]
-    #to_version = [14, 13, 50, 33, 50]
-
+    to_version = [13, 50, 33, 50, 14]
 
     results_path = '../../WTP-data/aggregate'
     matplotlib.rcParams.update({'font.size': 14})
-
     pd.set_option('display.max_columns', 1000)
 
     data_vals_stats = pd.DataFrame()
-    effect_size_vals = pd.DataFrame(columns=['project', 'additional', 'total'])
-
-
 
     for index, project in enumerate(projects):
-        first_fail, apfd = read_results(['agg11_cx_200.csv'],
+        first_fail, apfd = read_results(['agg11_cx_200.csv', 'std2.csv'],
                                         project, from_version[index], to_version[index] + 1)
 
         plt.close('all')
 
         # 'fp2_1__1_aa': 'fp_0_aa' --> c_dp1=1.0, c_dp2=0
 
-        apfd = apfd.rename(columns={"cl11": "cl_tt", "cl12": "cl_ta", "cl21": "cl_at", "cl22": "cl_aa", "fp2_1__1_at" : "fp_at",
-                             "fp2_1__1_aa": "fp_aa"})
-        first_fail = first_fail.rename(columns={"cl11": "cl_tt", "cl12": "cl_ta", "cl21": "cl_at", "cl22": "cl_aa", "fp2_1__1_at" : "fp_at",
-                             "fp2_1__1_aa": "fp_aa"})
+        first_fail = first_fail.rename(columns={"a11_c0_200_tt":"Clustering","a11_c0999_200_tt":"Clustering+FP",
+                                                "add_c0":"Additional","tot_c0":"Total",
+                                                "add_c0999":'Additional+FP', "tot_c0999":"Total+FP"})
 
 #        print(first_fail)
 #        print(apfd)
@@ -96,20 +87,19 @@ def main():
 
         data_vals_stats = data_vals_stats.append(first_fail_mean, ignore_index=True)
 
-        columns = ['tot_', 'tot_fp99', 'tot_fp999', 'tot_fp1', 'add_', 'add_fp99', 'add_fp999', 'add_fp1', "cl_tt",
-                   "cl_ta", "cl_at", "cl_aa"]
+        columns = ['Total', 'Additional', 'Total+FP', 'Additional+FP', 'Clustering', 'Clustering+FP']
 
-#        plot1 = first_fail.boxplot(column=columns)
-#        plot1.set_ylabel('First Fail (%)')
-#        plot1.set_ylim(0, 100)
+        plot1 = first_fail.boxplot(column=columns)
+        plot1.set_ylabel('First Fail (%)')
+        plot1.set_ylim(0, 100)
 
-#        plot1.set_title(project)
+        plot1.set_title(project)
 
-#        fig1 = plot1.get_figure()
-#        fig1.autofmt_xdate(rotation=90)
-#        fig1.savefig('%s/first_fail/%s.first_fail.boxplot.png' % (results_path, project))
+        fig1 = plot1.get_figure()
+        fig1.autofmt_xdate(rotation=90)
+        fig1.savefig('%s/first_fail/%s.first_fail.boxplot.png' % (results_path, project))
 
-#        plt.close('all')
+        plt.close('all')
 
     data_vals_stats.insert(0, 'project', projects)
     data_vals_stats.to_csv(results_path+'/first_fail/stats.csv')
