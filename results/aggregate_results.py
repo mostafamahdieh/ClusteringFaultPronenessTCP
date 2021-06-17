@@ -66,6 +66,7 @@ def main():
     pd.set_option('display.max_columns', 1000)
 
     data_vals_stats = pd.DataFrame()
+    improvement_stats = pd.DataFrame(columns=["project", "improvement_clustering", "improvement_clustering_fp"])
 
     for index, project in enumerate(projects):
         first_fail, apfd = read_results(['agg11_cx_200.csv', 'std2.csv'],
@@ -81,6 +82,12 @@ def main():
 
 #        print(first_fail)
 #        print(apfd)
+
+        improvement_clustering = improvement(pd.min(first_fail['Additional'],first_fail['Total']),first_fail["Clustering"])
+        improvement_clustering_fp = improvement(pd.min(first_fail['Additional+FP'], first_fail['Total+FP']), first_fail["Clustering+FP"])
+        print("improvement_clustering", improvement_clustering)
+        print("improvement_clustering_fp", improvement_clustering_fp)
+        improvement_stats.add([project, improvement_clustering, improvement_clustering_fp])
 
         first_fail_mean = first_fail.mean()
         first_fail_mean = first_fail_mean.drop('version')
