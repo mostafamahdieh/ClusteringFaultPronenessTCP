@@ -93,10 +93,11 @@ def main():
         plot1.set_ylabel('First Fail (%)')
         plot1.set_ylim(0, 100)
 
-        plot1.set_title(project)
+        #plot1.set_title(project)
 
         fig1 = plot1.get_figure()
-        fig1.autofmt_xdate(rotation=90)
+        fig1.autofmt_xdate(rotation=32)
+        #fig1.savefig('%s/first_fail/%s.first_fail.boxplot.png' % (results_path, project), bbox_inches='tight')
         fig1.savefig('%s/first_fail/%s.first_fail.boxplot.png' % (results_path, project))
 
         plt.close('all')
