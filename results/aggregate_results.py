@@ -83,8 +83,8 @@ def main():
 #        print(first_fail)
 #        print(apfd)
 
-        improvement_clustering = improvement(pd.min(first_fail['Additional'],first_fail['Total']),first_fail["Clustering"])
-        improvement_clustering_fp = improvement(pd.min(first_fail['Additional+FP'], first_fail['Total+FP']), first_fail["Clustering+FP"])
+        improvement_clustering = improvement(first_fail[['Additional', 'Total']].min(axis=1), first_fail["Clustering"])
+        improvement_clustering_fp = improvement(first_fail[['Additional+FP', 'Total+FP']].min(axis=1), first_fail["Clustering+FP"])
         print("improvement_clustering", improvement_clustering)
         print("improvement_clustering_fp", improvement_clustering_fp)
         improvement_stats.add([project, improvement_clustering, improvement_clustering_fp])
