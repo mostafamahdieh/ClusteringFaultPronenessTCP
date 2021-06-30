@@ -89,23 +89,25 @@ def run_prioritization_clustering_fp(bug_prediction_data, project, version_numbe
     f = open('%s/%s' % (data_path, filename), "w+")
     f.write("alg,first_fail,apfd\n")
 
-    for distance_metric in ['dice']:
+    for ind, c_dp in enumerate(c_dp_values):
+        unit_fp = generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num)
 
-        clusters, clustering = pr_cl.create_clusters(coverage, dp_unit_prob, clustering_method, distance_metric, cluster_num)
+        if c_dp == 0:
+            clusters, clustering = pr_cl.create_clusters(coverage, np.zeros(unit_num), clustering_method, cluster_num)
+        else:
+            clusters, clustering = pr_cl.create_clusters(coverage, dp_unit_prob, clustering_method, cluster_num)
 
-        for ind, c_dp in enumerate(c_dp_values):
-            unit_fp = generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num)
-            for inner_alg in ['total']:
-                for outer_alg in ['total']:
-                    print("Running tcp_clustering_inner_outer_fp for inner_alg: ", inner_alg, " outer_alg: ", outer_alg, " c_dp: ", c_dp)
-                    ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_alg, outer_alg)
-                    first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)
-                    apfd = pc.rank_evaluation_apfd(ranks, failed_tests_ids)
-                    print("first_fail: ", first_fail, " apfd: ", apfd)
+        for inner_alg in ['total', 'additional']:
+            for outer_alg in ['total', 'additional']:
+                print("Running tcp_clustering_inner_outer_fp for inner_alg: ", inner_alg, " outer_alg: ", outer_alg, " c_dp: ", c_dp)
+                ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_alg, outer_alg)
+                first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)
+                apfd = pc.rank_evaluation_apfd(ranks, failed_tests_ids)
+                print("first_fail: ", first_fail, " apfd: ", apfd)
 
-                    result_line = "%s_%s%s,%f,%f" % (alg_prefix[ind], alg_to_char(inner_alg), alg_to_char(outer_alg), first_fail, apfd)
+                result_line = "%s_%s%s,%f,%f" % (alg_prefix[ind], alg_to_char(inner_alg), alg_to_char(outer_alg), first_fail, apfd)
 
-                    f.write(result_line + "\n")
+                f.write(result_line + "\n")
 
     print()
     f.close()

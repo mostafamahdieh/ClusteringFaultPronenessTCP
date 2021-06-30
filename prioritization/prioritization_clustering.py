@@ -12,8 +12,8 @@ from sklearn.preprocessing import Normalizer
 from prioritization import prioritization_std as ps
 
 
-def clustering_agg11(coverage, dp_unit_prob, distance_metric, cluster_num):
-    print("Running agglomerative clustering (distance_metric = %s, cluster_num = %d)..." % (distance_metric, cluster_num))
+def clustering_agg11(coverage, dp_unit_prob, cluster_num):
+    print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
 
 #    coverage_eps = 0.1
 #    coverage_binary = coverage > coverage_eps
@@ -64,8 +64,8 @@ def clustering_agg11(coverage, dp_unit_prob, distance_metric, cluster_num):
     return clustering
 
 
-def clustering_agg12(coverage, dp_unit_prob, distance_metric, cluster_num):
-    print("Running agglomerative clustering (distance_metric = %s, cluster_num = %d)..." % (distance_metric, cluster_num))
+def clustering_agg12(coverage, dp_unit_prob, cluster_num):
+    print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
 
 #    coverage_eps = 0.1
 #    coverage_binary = coverage > coverage_eps
@@ -271,10 +271,10 @@ def compute_ordering_index(ordering):
     return ordering_index
 
 
-def create_clusters(coverage, dp_unit_prob, clustering_method, distance_metric, cluster_num):
+def create_clusters(coverage, dp_unit_prob, clustering_method, cluster_num):
     unit_num = coverage.shape[1]
 
-    clustering = clustering_method(coverage, dp_unit_prob, distance_metric, cluster_num)
+    clustering = clustering_method(coverage, dp_unit_prob, cluster_num)
     total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
 
     # constructing the clusters

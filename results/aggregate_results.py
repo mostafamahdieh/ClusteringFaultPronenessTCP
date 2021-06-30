@@ -17,8 +17,9 @@ def improvement(x, y):
     n = len(x)
     a = 0
     for i in range(0, n):
-        a = a + x[i] / y[i]
-    improvement = (a / n - 1) * 100
+#        print("x",x[i],"y",y[i],"x-y",x[i]-y[i])
+        a = a + (x[i] - y[i])
+    improvement = (a/n)
     return improvement
 
 
@@ -67,19 +68,23 @@ def main():
 
     data_vals_stats = pd.DataFrame()
     improvement_stats = pd.DataFrame(columns=["project", "improvement_clustering", "improvement_clustering_fp"])
+    first_fail_all = pd.DataFrame()
 
     for index, project in enumerate(projects):
-        first_fail, apfd = read_results(['agg11_cx_200.csv', 'std2.csv'],
+        first_fail, apfd = read_results(['agg11_2_200_full.csv', 'std2.csv'],
                                         project, from_version[index], to_version[index] + 1)
 
         plt.close('all')
 
         # 'fp2_1__1_aa': 'fp_0_aa' --> c_dp1=1.0, c_dp2=0
 
-        first_fail = first_fail.rename(columns={"a11_c0_200_tt":"Clustering","a11_c0999_200_tt":"Clustering+FP",
+#        first_fail = first_fail.rename(columns={"a12_3_c0_200_tt":"Clustering","a12_3_c0999_200_tt":"Clustering+FP",
+#                                                "add_c0":"Additional","tot_c0":"Total",
+#                                                "add_c0999":'Additional+FP', "tot_c0999":"Total+FP"})
+
+        first_fail = first_fail.rename(columns={"a11_2_c0_200_tt": "Clustering", "a11_2_c0999_200_tt": "Clustering+FP",
                                                 "add_c0":"Additional","tot_c0":"Total",
                                                 "add_c0999":'Additional+FP', "tot_c0999":"Total+FP"})
-
 #        print(first_fail)
 #        print(apfd)
 
@@ -89,6 +94,10 @@ def main():
         print("improvement_clustering_fp", improvement_clustering_fp)
         improvement_stats.add([project, improvement_clustering, improvement_clustering_fp])
 
+        if index == 0:
+            first_fail_all = first_fail
+        else:
+            first_fail_all = first_fail_all.append(first_fail)
         first_fail_mean = first_fail.mean()
         first_fail_mean = first_fail_mean.drop('version')
 
@@ -108,6 +117,13 @@ def main():
         fig1.savefig('%s/first_fail/%s.first_fail.boxplot.png' % (results_path, project))
 
         plt.close('all')
+
+    first_fail_all = first_fail_all.reset_index()
+    print(first_fail_all)
+    print("first_fail_total", stats.wilcoxon(first_fail_all["Total"],first_fail_all["Clustering"]))
+    print("first_fail_additional", stats.wilcoxon(first_fail_all["Additional"],first_fail_all["Clustering"]))
+    print("first_fail_tolal+fp", stats.wilcoxon(first_fail_all["Total+FP"],first_fail_all["Clustering+FP"]))
+    print("first_fail_additional+fp", stats.wilcoxon(first_fail_all["Additional+FP"],first_fail_all["Clustering+FP"]))
 
     data_vals_stats.insert(0, 'project', projects)
     data_vals_stats.to_csv(results_path+'/first_fail/stats.csv')
