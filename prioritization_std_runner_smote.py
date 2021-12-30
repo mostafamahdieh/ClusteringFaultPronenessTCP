@@ -20,6 +20,6 @@ for index, project in enumerate(projects):
     for version_number in range(from_version[index], to_version[index] + 1):
         print("* Version %d" % version_number)
         run_standard2_prioritization(bug_prediction_data, project, version_number,
-                                         [0, 0.999], 'std2_smote.csv',
-                                         ['smote_c0', 'smote_c0999'])
+                                         [0, 0.95], 'std2_smote_c95.csv',
+                                         ['smote_c0', 'smote_c95'])
         print()

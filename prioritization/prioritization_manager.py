@@ -98,7 +98,7 @@ def run_prioritization_clustering_fp(bug_prediction_data, project, version_numbe
             clusters, clustering = pr_cl.create_clusters(coverage, dp_unit_prob, clustering_method, cluster_num)
 
         for inner_alg in ['total', 'additional']:
-            for outer_alg in ['total', 'additional']:
+            for outer_alg in ['total']:
                 print("Running tcp_clustering_inner_outer_fp for inner_alg: ", inner_alg, " outer_alg: ", outer_alg, " c_dp: ", c_dp)
                 ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_alg, outer_alg)
                 first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)

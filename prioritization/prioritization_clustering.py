@@ -19,15 +19,8 @@ def clustering_agg11(coverage, dp_unit_prob, cluster_num):
 #    coverage_binary = coverage > coverage_eps
     inf = 1.0e10
 
-    coverage_normalized = Normalizer().transform(coverage)
-    distance = nan_euclidean_distances(coverage_normalized, coverage_normalized)
-#    distance = euclidean_distances(coverage, coverage)
-#    similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
-#    distance = 1-similarity
-
-#    dist = DistanceMetric.get_metric(distance_metric)
-#    distance = dist.pairwise(coverage_binary, coverage_binary)
-    distance = np.nan_to_num(distance, inf)
+    distance = euclidean_distances(coverage, coverage)
+#    distance = np.nan_to_num(distance, inf)
 
 #    conn_eps = 0.01
 #    connectivity = similarity.copy()

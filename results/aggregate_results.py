@@ -62,7 +62,12 @@ def main():
     from_version = [1, 1, 1, 1, 1]
     to_version = [13, 50, 33, 50, 14]
 
-    results_path = '../../WTP-data/aggregate'
+    results_path = '../../WTP-data/aggregate/first_fail/a11'
+    try:
+        os.stat(results_path)
+    except:
+        os.mkdir(results_path)       
+
     matplotlib.rcParams.update({'font.size': 14})
     pd.set_option('display.max_columns', 1000)
 
@@ -71,7 +76,7 @@ def main():
     first_fail_all = pd.DataFrame()
 
     for index, project in enumerate(projects):
-        first_fail, apfd = read_results(['agg11_2_200_full.csv', 'std2.csv'],
+        first_fail, apfd = read_results(['std2.csv', 'agg11_4.csv', 'std2_c95.csv', 'agg11_c95.csv'],
                                         project, from_version[index], to_version[index] + 1)
 
         plt.close('all')
@@ -82,9 +87,9 @@ def main():
 #                                                "add_c0":"Additional","tot_c0":"Total",
 #                                                "add_c0999":'Additional+FP', "tot_c0999":"Total+FP"})
 
-        first_fail = first_fail.rename(columns={"a11_2_c0_200_tt": "Clustering", "a11_2_c0999_200_tt": "Clustering+FP",
+        first_fail = first_fail.rename(columns={"a11_4_c0_at": "Clustering", "a11_c95_at": "Clustering+FP",
                                                 "add_c0":"Additional","tot_c0":"Total",
-                                                "add_c0999":'Additional+FP', "tot_c0999":"Total+FP"})
+                                                "add_c95":'Additional+FP', "tot_c95":"Total+FP"})
 #        print(first_fail)
 #        print(apfd)
 
@@ -103,7 +108,7 @@ def main():
 
         data_vals_stats = data_vals_stats.append(first_fail_mean, ignore_index=True)
 
-        columns = ['Total', 'Additional', 'Total+FP', 'Additional+FP', 'Clustering', 'Clustering+FP']
+        columns = ['Total', 'Additional', 'Clustering', 'Total+FP', 'Additional+FP', 'Clustering+FP']
 
         plot1 = first_fail.boxplot(column=columns)
         plot1.set_ylabel('First Fail (%)')
@@ -114,7 +119,7 @@ def main():
         fig1 = plot1.get_figure()
         fig1.autofmt_xdate(rotation=32)
         #fig1.savefig('%s/first_fail/%s.first_fail.boxplot.png' % (results_path, project), bbox_inches='tight')
-        fig1.savefig('%s/first_fail/%s.first_fail.boxplot.png' % (results_path, project))
+        fig1.savefig('%s/%s.first_fail.boxplot.png' % (results_path, project))
 
         plt.close('all')
 
@@ -126,6 +131,6 @@ def main():
     print("first_fail_additional+fp", stats.wilcoxon(first_fail_all["Additional+FP"],first_fail_all["Clustering+FP"]))
 
     data_vals_stats.insert(0, 'project', projects)
-    data_vals_stats.to_csv(results_path+'/first_fail/stats.csv')
+    data_vals_stats.to_csv(results_path+'/stats.csv')
 
 main()
