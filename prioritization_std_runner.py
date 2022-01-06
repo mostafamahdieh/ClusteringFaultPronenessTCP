@@ -1,7 +1,5 @@
 import pandas as pd
 from prioritization.prioritization_manager import run_standard2_prioritization
-from prioritization.prioritization_clustering import clustering_agg11
-from prioritization.prioritization_clustering import clustering_agg12
 
 projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
 from_version = [1, 1, 1, 1, 1]

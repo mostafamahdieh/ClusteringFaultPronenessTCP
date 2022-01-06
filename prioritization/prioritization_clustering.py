@@ -1,26 +1,14 @@
 import numpy as np
-from sklearn.cluster import KMeans
-from sklearn.metrics.pairwise import euclidean_distances
-from sklearn.metrics.pairwise import nan_euclidean_distances
-from sklearn.cluster import AgglomerativeClustering
 import operator
 import math
 
-from sklearn.neighbors import DistanceMetric
-from sklearn.preprocessing import Normalizer
-
 from prioritization import prioritization_std as ps
+from sklearn.cluster import AgglomerativeClustering
 
-
-def clustering_agg11(coverage, dp_unit_prob, cluster_num):
+def clustering_agg(coverage, dp_unit_prob, distance_function, cluster_num):
     print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
 
-#    coverage_eps = 0.1
-#    coverage_binary = coverage > coverage_eps
-    inf = 1.0e10
-
-    distance = euclidean_distances(coverage, coverage)
-#    distance = np.nan_to_num(distance, inf)
+    distance = distance_function(coverage, coverage)
 
 #    conn_eps = 0.01
 #    connectivity = similarity.copy()
@@ -55,70 +43,6 @@ def clustering_agg11(coverage, dp_unit_prob, cluster_num):
                                          affinity='precomputed').fit(distance)
     print("Clustering finished.")
     return clustering
-
-
-def clustering_agg12(coverage, dp_unit_prob, cluster_num):
-    print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
-
-#    coverage_eps = 0.1
-#    coverage_binary = coverage > coverage_eps
-    inf = 1.0e10
-
-    coverage_normalized = Normalizer().transform(coverage)
-#    distance = nan_euclidean_distances(coverage_normalized, coverage_normalized)
-#    distance = euclidean_distances(coverage, coverage)
-    similarity = np.matmul(coverage_normalized, np.matrix.transpose(coverage_normalized))
-    distance = 1-similarity
-
-#    dist = DistanceMetric.get_metric(distance_metric)
-#    distance = dist.pairwise(coverage_binary, coverage_binary)
-#    distance = np.nan_to_num(distance, inf)
-
-#    conn_eps = 0.01
-#    connectivity = similarity.copy()
-#    connectivity[connectivity > conn_eps] = 1
-#    connectivity[connectivity <= conn_eps] = 0
-
-
-    fp_big_threshold = 0.2
-    total_weighted_coverage = np.matmul(coverage, dp_unit_prob)
-    total_sorted_arg = np.argsort(total_weighted_coverage)
-    cluster_subset_maxsize = math.floor(cluster_num)
-    total_sorted_arg_des = total_sorted_arg[::-1]
-
-    print("coverage shape: ", np.shape(coverage))
-    print("distance shape: ", np.shape(distance))
-    print("total_weighted_coverage shape: ", np.shape(total_weighted_coverage))
-    print("number of total_weighted_coverage >= ", fp_big_threshold, ": ", np.sum(total_weighted_coverage >= fp_big_threshold))
-    print("cluster_subset_maxsize: ", cluster_subset_maxsize)
-    print("total_weighted_coverage[total_sorted_des[", cluster_subset_maxsize-1, "]]: ",
-          total_weighted_coverage[total_sorted_arg_des[cluster_subset_maxsize-1]])
-
-    cluster_subset_num = min(np.sum(total_weighted_coverage >= fp_big_threshold), cluster_subset_maxsize)
-    print("cluster_subset_num: ", cluster_subset_num)
-
-    total_sorted_arg_des_subset = total_sorted_arg_des[:cluster_subset_num]
-
-    for i in total_sorted_arg_des_subset:
-        for j in total_sorted_arg_des_subset:
-            distance[i, j] = inf
-
-    clustering = AgglomerativeClustering(n_clusters=cluster_num, linkage='average',
-                                         affinity='precomputed').fit(distance)
-    print("Clustering finished.")
-    return clustering
-def create_clusters(coverage, clustering_method, cluster_num):
-    unit_num = coverage.shape[1]
-
-    clustering = clustering_method(coverage, cluster_num)
-    total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
-
-    # constructing the clusters
-    clusters = [[] for c in range(0, cluster_num)]
-    for (index, val) in enumerate(clustering.labels_):
-        clusters[val].append((index, total_weighted_coverage[index]))
-
-    return clusters, clustering
 
 
 def tcp_full_total(clusters, test_num):
@@ -264,10 +188,10 @@ def compute_ordering_index(ordering):
     return ordering_index
 
 
-def create_clusters(coverage, dp_unit_prob, clustering_method, cluster_num):
+def create_clusters(coverage, dp_unit_prob, clustering_method, distance_function, cluster_num):
     unit_num = coverage.shape[1]
 
-    clustering = clustering_method(coverage, dp_unit_prob, cluster_num)
+    clustering = clustering_method(coverage, dp_unit_prob, distance_function, cluster_num)
     total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
 
     # constructing the clusters

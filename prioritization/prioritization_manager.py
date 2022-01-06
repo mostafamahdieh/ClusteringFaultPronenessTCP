@@ -73,7 +73,7 @@ def run_standard2_prioritization(bug_prediction_data, project, version_number, c
     f.close()
 
 
-def run_prioritization_clustering_fp(bug_prediction_data, project, version_number, clustering_method, cluster_num, c_dp_values, filename, alg_prefix):
+def run_prioritization_clustering_fp(bug_prediction_data, project, version_number, clustering_method, distance_function, cluster_nums, c_dp_values, filename, alg_prefix):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
@@ -90,24 +90,25 @@ def run_prioritization_clustering_fp(bug_prediction_data, project, version_numbe
     f.write("alg,first_fail,apfd\n")
 
     for ind, c_dp in enumerate(c_dp_values):
-        unit_fp = generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num)
+        for cluster_num in cluster_nums:
+            unit_fp = generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num)
 
-        if c_dp == 0:
-            clusters, clustering = pr_cl.create_clusters(coverage, np.zeros(unit_num), clustering_method, cluster_num)
-        else:
-            clusters, clustering = pr_cl.create_clusters(coverage, dp_unit_prob, clustering_method, cluster_num)
+            if c_dp == 0:
+                clusters, clustering = pr_cl.create_clusters(coverage, np.zeros(unit_num), clustering_method, distance_function, cluster_num)
+            else:
+                clusters, clustering = pr_cl.create_clusters(coverage, dp_unit_prob, clustering_method, distance_function, cluster_num)
 
-        for inner_alg in ['total', 'additional']:
-            for outer_alg in ['total']:
-                print("Running tcp_clustering_inner_outer_fp for inner_alg: ", inner_alg, " outer_alg: ", outer_alg, " c_dp: ", c_dp)
-                ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_alg, outer_alg)
-                first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)
-                apfd = pc.rank_evaluation_apfd(ranks, failed_tests_ids)
-                print("first_fail: ", first_fail, " apfd: ", apfd)
+            for inner_alg in ['additional']:
+                for outer_alg in ['total']:
+                    print("Running tcp_clustering_inner_outer_fp for inner_alg: ", inner_alg, " outer_alg: ", outer_alg, " c_dp: ", c_dp)
+                    ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_alg, outer_alg)
+                    first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)
+                    apfd = pc.rank_evaluation_apfd(ranks, failed_tests_ids)
+                    print("first_fail: ", first_fail, " apfd: ", apfd)
 
-                result_line = "%s_%s%s,%f,%f" % (alg_prefix[ind], alg_to_char(inner_alg), alg_to_char(outer_alg), first_fail, apfd)
+                    result_line = "%s_clus%d_%s%s,%f,%f" % (alg_prefix[ind], cluster_num, alg_to_char(inner_alg), alg_to_char(outer_alg), first_fail, apfd)
 
-                f.write(result_line + "\n")
+                    f.write(result_line + "\n")
 
     print()
     f.close()
