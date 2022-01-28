@@ -1,4 +1,7 @@
-defect_prediction/cache
+defect_prediction/cache/*
+defect_prediction/xgb_results/*
+defect_prediction/rf_results/*
+defect_prediction/cb_results/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -37,3 +37,4 @@ urllib3==1.25.7
 Werkzeug==0.16.0
 wrapt==1.11.2
 xgboost==1.5.1
+catboost==1.0.4

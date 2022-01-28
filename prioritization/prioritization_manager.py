@@ -1,5 +1,5 @@
 import numpy as np
-from prioritization import prioritization_std as ps,  prioritization_core as pc, prioritization_clustering as pr_cl
+from prioritization import prioritization_std as ps,  prioritization_core as pc, prioritization_clustering as pr_cl, prioritization_gclef as pr_gclef
 
 
 def extract_bug_prediction_for_units_version(bug_prediction_data, version, unit_names, unit_num):
@@ -68,6 +68,80 @@ def run_standard2_prioritization(bug_prediction_data, project, version_number, c
 
         result_line = "tot_%s,%f,%f" % (alg_prefix[ind], total_prioritization_first_fail, total_prioritization_apfd)
         f.write(result_line + "\n")
+
+    print()
+    f.close()
+
+
+def is_remaining_coverage_zero(cluster, test_used):
+    eps = 1e-8
+    for (test_ind, total_coverage) in cluster:
+        if not test_used[test_ind] and total_coverage > eps:
+            return False
+    return True
+
+
+def extract_classes_in_data(unit_names, unit_num):
+    class_of_units = []
+    units_in_class = dict()
+
+    for u in range(0, unit_num):
+        unit_class = str(unit_names[u])[2:].split('#')[0]
+        unit_class = unit_class.strip()
+        class_of_units.append(unit_class)
+        if unit_class not in units_in_class:
+            units_in_class[unit_class] = []
+        units_in_class[unit_class].append(u)
+
+    return class_of_units, units_in_class
+
+
+def extract_bug_prediction_for_classes(bug_prediction_data, version, unit_names, class_of_units):
+    class_dp_prob = dict()
+
+    for unit_class in class_of_units:
+        if not unit_class in class_dp_prob:
+            b_all = bug_prediction_data[bug_prediction_data.LongName == unit_class]
+            b = b_all[b_all.version == version]
+            if not b.empty:
+                class_dp_prob[unit_class] = b.xgb_score.max()
+
+    return class_dp_prob
+
+
+def run_gclef_prioritization(bug_prediction_data, project, version_number, filename, alg_prefix):
+    data_path = "../WTP-data/%s/%d" % (project, version_number)
+
+    coverage, test_names, unit_names = pc.read_coverage_data(data_path)
+    failed_tests_ids = pc.read_failed_tests(data_path, test_names)
+    if np.size(failed_tests_ids) == 0:
+        print("No Tests found in coverage values, skipping version")
+        return
+
+    unit_num = coverage.shape[1]
+    class_of_units, units_in_class = extract_classes_in_data(unit_names, unit_num)
+    class_dp_prob = extract_bug_prediction_for_classes(bug_prediction_data, version_number, unit_names, class_of_units)
+
+    # sort classes in decreasing order of fault-proneness
+    sorted_classes_list = sorted(class_dp_prob.items(), key=lambda item: item[1], reverse=True)
+
+    # create clusters of test cases where each cluster covers a class. clusters might have redundant test cases
+    clusters = pr_gclef.create_gclef_clusters(coverage, unit_names, units_in_class, sorted_classes_list)
+
+    f = open('%s/%s' % (data_path, filename), "w+")
+    f.write("alg,first_fail,apfd\n")
+
+    additional_ordering = pr_gclef.tcp_gclef_prioritization(clusters, coverage, 'additional')
+    additional_apfd = pc.rank_evaluation_apfd(additional_ordering, failed_tests_ids)
+    additional_first_fail = pc.rank_evaluation_first_fail(additional_ordering, failed_tests_ids)
+    result_line = "gclef_add_%s,%f,%f" % (alg_prefix, additional_first_fail, additional_apfd)
+    f.write(result_line + "\n")
+
+    total_prioritization_ordering = pr_gclef.tcp_gclef_prioritization(clusters, coverage, 'total')
+    total_prioritization_apfd = pc.rank_evaluation_apfd(total_prioritization_ordering, failed_tests_ids)
+    total_prioritization_first_fail = pc.rank_evaluation_first_fail(total_prioritization_ordering, failed_tests_ids)
+    result_line = "gclef_tot_%s,%f,%f" % (alg_prefix, total_prioritization_first_fail, total_prioritization_apfd)
+    f.write(result_line + "\n")
 
     print()
     f.close()
