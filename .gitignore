@@ -134,3 +134,7 @@ dmypy.json
 
 .idea/
 *.out
+/defect_prediction/xgb_results/
+/defect_prediction/rf_results/
+/defect_prediction/cache/
+/defect_prediction/catboost_info/

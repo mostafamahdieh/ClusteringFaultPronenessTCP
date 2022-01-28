@@ -1,13 +1,8 @@
 import os
-import pickle
-from multiprocessing import Pool
 
 import numpy as np
-import pandas as pd
 from catboost import CatBoostClassifier
-from scipy.stats import uniform, gamma
 from sklearn.metrics import matthews_corrcoef
-from sklearn.model_selection import ParameterSampler
 
 from utils import get_best_threshold, evaluate_model_prediction, subsample_tarin_data, \
     drop_non_numerical, get_labels, make_dataframes, add_is_changed_column
@@ -21,8 +16,8 @@ if not os.path.exists(CB_RESULT_DIR):
     os.mkdir(CB_RESULT_DIR)
 
 
-def run_single_catboost_fit(index, parameter_sample, x_train, y_train, x_test, y_test):
-    clf = CatBoostClassifier(**parameter_sample)
+def run_single_catboost_fit(x_train, y_train, x_test, y_test):
+    clf = CatBoostClassifier(verbose=0)
     clf.fit(x_train, y_train)
     y_pred = clf.predict_proba(x_test)[:, 1]
 
@@ -31,50 +26,13 @@ def run_single_catboost_fit(index, parameter_sample, x_train, y_train, x_test, y
     score = matthews_corrcoef(y_test, y_label)
     other_scores = evaluate_model_prediction(y_test, y_label, print_results=False)
 
-    # print(f"iter: {index}, score: {score}, threshold: {thr}, other: {other_scores}, params: {parameter_sample}")
-    return {'index': index, 'params': parameter_sample, 'threshold': thr,
-            'score': score, 'other_scoring_results': other_scores}
+    print(score, other_scores)
+
+    return y_pred, y_label, thr
 
 
-def perform_cv(x_train, y_train, x_test, y_test):
-    parameters = {'learning_rate': gamma(1.0),
-                  'depth': [2, 3, 4, 5, 8, 10, 16, 20],
-                  'iterations': [5, 10, 20, 40, 80, 100, 160],
-                  'l2_leaf_reg': gamma(2.0),
-                  'class_weight': [{0: 1, 1: 1}, {0: 1, 1: 2}, {0: 1, 1: 3}, {0: 1, 1: 5}],
-                  'random_seed': [1337]}
-
-    param_sampler = ParameterSampler(param_distributions=parameters, random_state=1337, n_iter=1000)
-    with Pool(4) as pool:
-        results = pool.starmap(run_single_catboost_fit, [(index, parameter_sample, x_train, y_train, x_test, y_test)
-                                                         for index, parameter_sample in enumerate(param_sampler)])
-
-    results_df = pd.DataFrame(results).sort_values(by=['score', 'threshold'], ascending=[False, True])
-
-    best_model = results_df.iloc[0]
-    print(results_df.score.mean())
-    print(best_model.other_scoring_results)
-
-    best_thr = best_model.threshold
-    return best_model, results_df, best_thr
-
-
-def determine_best_params_and_threshold_cv(dataframe, cache_file='cb_cv_params_thresholds_cache.pkl',
-                                           logs_file='cb_cv_results.pkl'):
-    cache_path = os.path.join(CACHE_DIR, cache_file)
-    if os.path.exists(cache_path):
-        print('reading cv params and thresholds from cache file')
-        with open(cache_path, 'rb') as cache_fd:
-            params_dict, thresholds_dict = pickle.load(cache_fd)
-        return params_dict, thresholds_dict
-
+def determine_best_params_and_threshold_cv(dataframe):
     print('determining the params via cross-validation hyper parameter tuning and its thresholds')
-    logs_path = os.path.join(CACHE_DIR, logs_file)
-    # if os.path.exists(logs_path):
-    #    with open(logs_path, 'rb') as logs_fd:
-    #     results_dict = pickle.load(logs_fd)
-    #     return results_dict
-
     sampled_dataframe = subsample_tarin_data(dataframe, 0.05)
 
     projects = dataframe.project.unique()
@@ -87,32 +45,23 @@ def determine_best_params_and_threshold_cv(dataframe, cache_file='cb_cv_params_t
         # First 5 versions of each project is also used for testing purposes
         print(project)
         last_k_versions = dataframe[dataframe.project == project].version.sort_values().unique()[-5:]
-        cv_train_indices = (sampled_dataframe.project != project) & (sampled_dataframe.version > 5)
-        cv_test_indices = ((dataframe.project == project) & (dataframe.version.isin(last_k_versions))) | \
-                          ((dataframe.project != project) & (dataframe.version <= 5))
+        train_indices = (sampled_dataframe.project != project) & (sampled_dataframe.version > 5)
+        test_indices = ((dataframe.project == project) & (dataframe.version.isin(last_k_versions))) | \
+                       ((dataframe.project != project) & (dataframe.version <= 5))
 
-        cv_x_train, cv_x_test = drop_non_numerical(sampled_dataframe[cv_train_indices]), drop_non_numerical(
-            dataframe[cv_test_indices])
-        cv_y_train, cv_y_test = get_labels(sampled_dataframe[cv_train_indices]), get_labels(dataframe[cv_test_indices])
+        cv_x_train, cv_x_test = drop_non_numerical(sampled_dataframe[train_indices]), drop_non_numerical(
+            dataframe[test_indices])
+        cv_y_train, cv_y_test = get_labels(sampled_dataframe[train_indices]), get_labels(dataframe[test_indices])
 
-        best_model, results_df, best_thr = perform_cv(cv_x_train, cv_y_train, cv_x_test, cv_y_test)
+        _, _, best_thr = run_single_catboost_fit(cv_x_train, cv_y_train, cv_x_test, cv_y_test)
 
-        params_dict[project] = best_model.params
         thresholds_dict[project] = best_thr
-        results_dict[project] = results_df
-
-    with open(logs_path, 'wb') as logs_file_fd:
-        pickle.dump(results_dict, logs_file_fd)
-
-    with open(cache_path, 'wb') as cache_fd:
-        pickle.dump((params_dict, thresholds_dict), cache_fd)
-
-    return params_dict, thresholds_dict
+    return thresholds_dict
 
 
 def train_model_offline_learning(dataframe):
     # Determine best params and thresholds using cross-validation
-    params_dict, thresholds_dict = determine_best_params_and_threshold_cv(dataframe)
+    thresholds_dict = determine_best_params_and_threshold_cv(dataframe)
 
     sampled_dataframe = subsample_tarin_data(dataframe, 0.05)
 
@@ -133,10 +82,10 @@ def train_model_offline_learning(dataframe):
             dataframe[test_indices])
         y_train, y_test = get_labels(sampled_dataframe[train_indices]), get_labels(dataframe[test_indices])
 
-        clf = CatBoostClassifier(**params_dict[project])
+        clf = CatBoostClassifier(verbose=0)
         clf.fit(x_train, y_train)
-        y_pred = clf.predict_proba(x_test)[:, 1]
 
+        y_pred = clf.predict_proba(x_test)[:, 1]
         y_label = y_pred > thresholds_dict[project]
         evaluate_model_prediction(y_test, y_label)
 
@@ -157,7 +106,7 @@ def train_model_offline_learning(dataframe):
 
 def train_model_online_learning(dataframe):
     # Determine best params and thresholds using cross-validation
-    params_dict, thresholds_dict = determine_best_params_and_threshold_cv(dataframe)
+    thresholds_dict = determine_best_params_and_threshold_cv(dataframe)
 
     sampled_dataframe = subsample_tarin_data(dataframe, 0.05)
 
@@ -170,7 +119,22 @@ def train_model_online_learning(dataframe):
     for project in projects:
         versions = np.array(dataframe[dataframe.project == project].version.sort_values().unique())
         print(project)
-        for version in versions:
+
+        last_k_versions = dataframe[dataframe.project == project].version.sort_values().unique()[-5:]
+        train_indices = (sampled_dataframe.project != project) | (sampled_dataframe.project == project)
+        validation_indices = (dataframe.project == project) & (dataframe.version.isin(last_k_versions))
+
+        x_train, x_val = drop_non_numerical(sampled_dataframe[train_indices]), drop_non_numerical(
+            dataframe[validation_indices])
+        y_train, y_val = get_labels(sampled_dataframe[train_indices]), get_labels(dataframe[validation_indices])
+
+        y_pred, _, _ = run_single_catboost_fit(x_train, y_train, x_val, y_val)
+        y_label = y_pred > thresholds_dict[project]
+        result_df.loc[validation_indices, 'cb_score_online'] = y_pred
+        result_df.loc[validation_indices, 'cb_label_online'] = y_label
+        result_df.loc[validation_indices, 'cb_threshold_online'] = thresholds_dict[project]
+
+        for version in versions[:-5]:
             # print(f"{project}:#{version}")
             train_indices = (sampled_dataframe.project != project) | (
                     (sampled_dataframe.project == project) & (sampled_dataframe.version > version))
@@ -180,11 +144,12 @@ def train_model_online_learning(dataframe):
                 dataframe[test_indices])
             y_train, y_test = get_labels(sampled_dataframe[train_indices]), get_labels(dataframe[test_indices])
 
-            clf = CatBoostClassifier(**params_dict[project])
+            clf = CatBoostClassifier(verbose=0)
             clf.fit(x_train, y_train)
 
             y_pred = clf.predict_proba(x_test)[:, 1]
             y_label = y_pred > thresholds_dict[project]
+
             result_df.loc[test_indices, 'cb_score_online'] = y_pred
             result_df.loc[test_indices, 'cb_label_online'] = y_label
             result_df.loc[test_indices, 'cb_threshold_online'] = thresholds_dict[project]
