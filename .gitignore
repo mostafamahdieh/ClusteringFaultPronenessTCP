@@ -138,3 +138,4 @@ dmypy.json
 /defect_prediction/rf_results/
 /defect_prediction/cache/
 /defect_prediction/catboost_info/
+/defect_prediction/cb_results/
