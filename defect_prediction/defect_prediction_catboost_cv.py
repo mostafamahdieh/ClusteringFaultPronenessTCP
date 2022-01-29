@@ -157,7 +157,7 @@ def train_model_online_learning(dataframe):
         not_last_k_versions = result_df[result_df.project == project].version.sort_values().unique()[:-5]
         test_indices = (result_df.project == project) & (result_df.version.isin(not_last_k_versions))
         y_test = get_labels(result_df[test_indices])
-        y_label = result_df[test_indices].xgb_label_online
+        y_label = result_df[test_indices].cb_label_online
         evaluate_model_prediction(y_test, y_label)
 
         result_indices = result_df.project == project
