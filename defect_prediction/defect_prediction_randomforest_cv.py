@@ -25,14 +25,20 @@ def run_single_randomforest_fit(index, parameter_sample, x_train, y_train, x_tes
     clf.fit(x_train, y_train)
     y_pred = clf.predict_proba(x_test)[:, 1]
 
+    y_train_pred = clf.predict_proba(x_train)[:, 1]
+
+
     thr = get_best_threshold(y_test, y_pred)
     y_label = y_pred > thr
-    score = matthews_corrcoef(y_test, y_label)
-    other_scores = evaluate_model_prediction(y_test, y_label, print_results=False)
 
-    # print(f"iter: {index}, score: {score}, threshold: {thr}, other: {other_scores}, params: {parameter_sample}")
+    test_score = matthews_corrcoef(y_test, y_label)
+    y_train_label = y_train_pred > thr
+    train_score = matthews_corrcoef(y_train, y_train_label)
+    other_scores = evaluate_model_prediction(y_test, y_pred, thr, print_results=False)
+
+    # print(f"iter: {index}, score: {test_score}, threshold: {thr}, params: {parameter_sample}")
     return {'index': index, 'params': parameter_sample, 'threshold': thr,
-            'score': score, 'other_scoring_results': other_scores}
+            'test_score': test_score, 'train_score': train_score, 'other_scoring_results': other_scores}
 
 
 def perform_cv(x_train, y_train, x_test, y_test):
@@ -122,6 +128,7 @@ def train_model_offline_learning(dataframe):
     result_df['rf_score_offline'] = 0
     result_df['rf_label_offline'] = False
     result_df['rf_threshold_offline'] = 0
+    scores_list = []
     for project in projects:
         print(project)
         # Train with all of other project data-points and test with this project
@@ -138,8 +145,11 @@ def train_model_offline_learning(dataframe):
         clf.fit(x_train, y_train)
         y_pred = clf.predict_proba(x_test)[:, 1]
 
-        y_label = y_pred > thresholds_dict[project]
-        evaluate_model_prediction(y_test, y_label)
+        scores = evaluate_model_prediction(y_test, y_pred, thresholds_dict[project])
+        scores['project'] = project
+        scores['type'] = 'rf-offline'
+        scores['threshold'] = thresholds_dict[project]
+        scores_list.append(scores)
 
         # Re run inference on all of the project data
         result_indices = (dataframe.project == project)
@@ -152,7 +162,9 @@ def train_model_offline_learning(dataframe):
         result_df.loc[result_indices, 'rf_threshold_offline'] = thresholds_dict[project]
         result_df[result_indices].copy().reset_index().to_csv(os.path.join(RF_RESULT_DIR, "rf-" + project + ".csv"))
 
-    result_df.to_csv(os.path.join(RF_RESULT_DIR, "rf-results.csv"))
+    scores_df = pd.DataFrame(scores_list)
+    scores_df.to_csv(os.path.join(RF_RESULT_DIR, "rf-offline-scores.csv"))
+    result_df.to_csv(os.path.join(RF_RESULT_DIR, "rf-offline-results.csv"))
     return result_df
 
 
@@ -168,6 +180,7 @@ def train_model_online_learning(dataframe):
     result_df['rf_score_online'] = 0
     result_df['rf_label_online'] = False
     result_df['rf_threshold_online'] = 0
+    scores_list = []
     for project in projects:
         versions = np.array(dataframe[dataframe.project == project].version.sort_values().unique())
         print(project)
@@ -193,13 +206,20 @@ def train_model_online_learning(dataframe):
         not_last_k_versions = result_df[result_df.project == project].version.sort_values().unique()[:-5]
         test_indices = (result_df.project == project) & (result_df.version.isin(not_last_k_versions))
         y_test = get_labels(result_df[test_indices])
-        y_label = result_df[test_indices].rf_label_online
-        evaluate_model_prediction(y_test, y_label)
+        y_pred = result_df[test_indices].rf_score_online
+
+        scores = evaluate_model_prediction(y_test, y_pred, thresholds_dict[project])
+        scores['project'] = project
+        scores['type'] = 'rf-online'
+        scores['threshold'] = thresholds_dict[project]
+        scores_list.append(scores)
 
         result_indices = result_df.project == project
         result_df[result_indices].copy().reset_index()\
             .to_csv(os.path.join(RF_RESULT_DIR, "rf-online-" + project + ".csv"))
 
+    scores_df = pd.DataFrame(scores_list)
+    scores_df.to_csv(os.path.join(RF_RESULT_DIR, "rf-online-scores.csv"))
     result_df.to_csv(os.path.join(RF_RESULT_DIR, "rf-online-results.csv"))
     return result_df
 

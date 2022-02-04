@@ -5,7 +5,7 @@ from multiprocessing import Pool
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-from scipy.stats import uniform, gamma
+from scipy.stats import uniform
 from sklearn.metrics import matthews_corrcoef
 from sklearn.model_selection import ParameterSampler
 
@@ -26,14 +26,19 @@ def run_single_xgboost_fit(index, parameter_sample, x_train, y_train, x_test, y_
     clf.fit(x_train, y_train)
     y_pred = clf.predict(x_test)
 
+    y_train_pred = clf.predict(x_train)
+
     thr = get_best_threshold(y_test, y_pred)
     y_label = y_pred > thr
-    score = matthews_corrcoef(y_test, y_label)
-    other_scores = evaluate_model_prediction(y_test, y_label, print_results=False)
 
-    # print(f"iter: {index}, score: {score}, threshold: {thr}, other: {other_scores}, params: {parameter_sample}")
+    test_score = matthews_corrcoef(y_test, y_label)
+    y_train_label = y_train_pred > thr
+    train_score = matthews_corrcoef(y_train, y_train_label)
+    other_scores = evaluate_model_prediction(y_test, y_pred, thr, print_results=False)
+
+    # print(f"iter: {index}, score: {test_score}, threshold: {thr}, params: {parameter_sample}")
     return {'index': index, 'params': parameter_sample, 'threshold': thr,
-            'score': score, 'other_scoring_results': other_scores}
+            'test_score': test_score, 'train_score': train_score, 'other_scoring_results': other_scores}
 
 
 def perform_cv(x_train, y_train, x_test, y_test):
@@ -41,26 +46,30 @@ def perform_cv(x_train, y_train, x_test, y_test):
                   'booster': ['gbtree'],
                   'nthread': [2],
                   'objective': ['reg:logistic'],
-                  'learning_rate': gamma(1.0),
+                  'learning_rate': [1e-3, 5e-3, 1e-2, 5e-2, 1e-1, 5e-1, 1],
                   'max_depth': [2, 3, 4, 5, 8, 10, 16, 20],
-                  'subsample': [1],
-                  'colsample_bytree': uniform(0.1, 0.90),
-                  'n_estimators': [5, 10, 20, 40, 80, 100, 160],
-                  'lambda': gamma(2.0),
-                  'gamma': uniform(0, 1),
-                  'alpha': gamma(2.0),
+                  'subsample': [0.9, 1],
+                  'colsample_bytree': uniform(0.5, 0.5),
+                  'n_estimators': [5, 10, 20, 40, 80, 100, 150, 200, 300, 400],
+                  'lambda': [0, 0.01, 0.1, 1, 2, 5],
+                  'gamma': [0, 1],
+                  'alpha': [0, 0.01, 0.1, 1, 2, 5],
                   'seed': [1337]}
 
-    param_sampler = ParameterSampler(param_distributions=parameters, random_state=1337, n_iter=1000)
+    param_sampler = ParameterSampler(param_distributions=parameters, random_state=1337, n_iter=2000)
     with Pool(4) as pool:
         results = pool.starmap(run_single_xgboost_fit, [(index, parameter_sample, x_train, y_train, x_test, y_test)
                                                         for index, parameter_sample in enumerate(param_sampler)])
-
-    results_df = pd.DataFrame(results).sort_values(by=['score', 'threshold'], ascending=[False, True])
+    results_df = pd.DataFrame(results)
+    results_df['robustness'] = results_df.params.apply(lambda x: x['n_estimators'] / x['max_depth'])
+    results_df = results_df.sort_values(by=['test_score', 'robustness'], ascending=[False, False])
 
     best_model = results_df.iloc[0]
-    print(results_df.score.mean())
+    print(results_df.test_score.mean())
     print(best_model.other_scoring_results)
+    print(len(results_df[results_df.test_score == best_model.test_score]))
+    print(len(results_df[(results_df.test_score == best_model.test_score) &
+                         (results_df.train_score == best_model.train_score)]))
 
     best_thr = best_model.threshold
     return best_model, results_df, best_thr
@@ -117,9 +126,34 @@ def determine_best_params_and_threshold_cv(dataframe, cache_file='xgb_cv_params_
     return params_dict, thresholds_dict
 
 
+# TODO: integrate this with the non cached version
+def determine_best_params_and_threshold_cv_cache(logs_file='xgb_cv_results.pkl'):
+    print('determining the params via cross-validation hyper parameter tuning and its thresholds')
+    logs_path = os.path.join(CACHE_DIR, logs_file)
+    if os.path.exists(logs_path):
+       with open(logs_path, 'rb') as logs_fd:
+        results_dict = pickle.load(logs_fd)
+    else:
+        raise RuntimeError(f"cv logs file not present")
+
+    projects = results_dict.keys()
+    thresholds_dict = {}
+    params_dict = {}
+    for project in projects:
+        results = results_dict[project]
+        best_models = results[results.test_score == results.iloc[0].test_score]
+        best_models['robustness'] = best_models.params.apply(lambda x: x['n_estimators']/x['max_depth'])
+        best_model = best_models.sort_values(by=['robustness'], ascending=[False]).iloc[0]
+        thresholds_dict[project] = best_model.threshold
+        params_dict[project] = best_model.params
+
+    return params_dict, thresholds_dict
+
+
 def train_model_offline_learning(dataframe):
     # Determine best params and thresholds using cross-validation
     params_dict, thresholds_dict = determine_best_params_and_threshold_cv(dataframe)
+    # params_dict, thresholds_dict = determine_best_params_and_threshold_cv_cache()
 
     sampled_dataframe = subsample_tarin_data(dataframe, 0.05)
 
@@ -128,6 +162,7 @@ def train_model_offline_learning(dataframe):
     result_df['xgb_score_offline'] = 0
     result_df['xgb_label_offline'] = False
     result_df['xgb_threshold_offline'] = 0
+    scores_list = []
     for project in projects:
         print(project)
         # Train with all of other project data-points and test with this project
@@ -144,8 +179,11 @@ def train_model_offline_learning(dataframe):
         clf.fit(x_train, y_train)
         y_pred = clf.predict(x_test)
 
-        y_label = y_pred > thresholds_dict[project]
-        evaluate_model_prediction(y_test, y_label)
+        scores = evaluate_model_prediction(y_test, y_pred, thresholds_dict[project])
+        scores['project'] = project
+        scores['type'] = 'xgb-offline'
+        scores['threshold'] = thresholds_dict[project]
+        scores_list.append(scores)
 
         # Re run inference on all of the project data
         result_indices = (dataframe.project == project)
@@ -158,13 +196,16 @@ def train_model_offline_learning(dataframe):
         result_df.loc[result_indices, 'xgb_threshold_offline'] = thresholds_dict[project]
         result_df[result_indices].copy().reset_index().to_csv(os.path.join(XGB_RESULT_DIR, "xgb-" + project + ".csv"))
 
-    result_df.to_csv(os.path.join(XGB_RESULT_DIR, "xgb-results.csv"))
+    scores_df = pd.DataFrame(scores_list)
+    scores_df.to_csv(os.path.join(XGB_RESULT_DIR, "xgb-offline-scores.csv"))
+    result_df.to_csv(os.path.join(XGB_RESULT_DIR, "xgb-offline-results.csv"))
     return result_df
 
 
 def train_model_online_learning(dataframe):
     # Determine best params and thresholds using cross-validation
     params_dict, thresholds_dict = determine_best_params_and_threshold_cv(dataframe)
+    # params_dict, thresholds_dict = determine_best_params_and_threshold_cv_cache()
 
     sampled_dataframe = subsample_tarin_data(dataframe, 0.05)
 
@@ -174,6 +215,7 @@ def train_model_online_learning(dataframe):
     result_df['xgb_score_online'] = 0
     result_df['xgb_label_online'] = False
     result_df['xgb_threshold_online'] = 0
+    scores_list = []
     for project in projects:
         versions = np.array(dataframe[dataframe.project == project].version.sort_values().unique())
         print(project)
@@ -199,13 +241,20 @@ def train_model_online_learning(dataframe):
         not_last_k_versions = result_df[result_df.project == project].version.sort_values().unique()[:-5]
         test_indices = (result_df.project == project) & (result_df.version.isin(not_last_k_versions))
         y_test = get_labels(result_df[test_indices])
-        y_label = result_df[test_indices].xgb_label_online
-        evaluate_model_prediction(y_test, y_label)
+        y_pred = result_df[test_indices].xgb_score_online
+
+        scores = evaluate_model_prediction(y_test, y_pred, thresholds_dict[project])
+        scores['project'] = project
+        scores['type'] = 'xgb-online'
+        scores['threshold'] = thresholds_dict[project]
+        scores_list.append(scores)
 
         result_indices = result_df.project == project
-        result_df[result_indices].copy().reset_index()\
+        result_df[result_indices].copy().reset_index() \
             .to_csv(os.path.join(XGB_RESULT_DIR, "xgb-online-" + project + ".csv"))
 
+    scores_df = pd.DataFrame(scores_list)
+    scores_df.to_csv(os.path.join(XGB_RESULT_DIR, "xgb-online-scores.csv"))
     result_df.to_csv(os.path.join(XGB_RESULT_DIR, "xgb-online-results.csv"))
     return result_df
 
