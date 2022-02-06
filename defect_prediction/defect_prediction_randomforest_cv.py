@@ -56,10 +56,10 @@ def perform_cv(x_train, y_train, x_test, y_test):
         results = pool.starmap(run_single_randomforest_fit, [(index, parameter_sample, x_train, y_train, x_test, y_test)
                                                              for index, parameter_sample in enumerate(param_sampler)])
 
-    results_df = pd.DataFrame(results).sort_values(by=['score', 'threshold'], ascending=[False, True])
+    results_df = pd.DataFrame(results).sort_values(by=['test_score', 'threshold'], ascending=[False, True])
 
     best_model = results_df.iloc[0]
-    print(results_df.score.mean())
+    print(results_df.test_score.mean())
     print(best_model.other_scoring_results)
 
     best_thr = best_model.threshold
