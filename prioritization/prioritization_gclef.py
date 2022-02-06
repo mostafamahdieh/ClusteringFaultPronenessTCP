@@ -13,15 +13,26 @@ def create_gclef_clusters(coverage, unit_names, units_in_class, sorted_classes_l
         for u in units_in_class[cl]:
             unit_class_matrix[u][ind] = 1
 
-    test_class_coverage = np.multiply(coverage, unit_class_matrix)
-    nonzero_tests, nonzero_classes = np.where(test_class_coverage > 0.01)
-
+    test_class_coverage = np.matmul(coverage, unit_class_matrix)
+    nonzero_coverage = test_class_coverage > 0.001
+    nonzero_tests, nonzero_classes = np.where(nonzero_coverage)
+    
     clusters = [[] for c in range(0, class_num)]
 
     for ind, test in enumerate(nonzero_tests):
         clusters[nonzero_classes[ind]].append((test, total_weighted_coverage[test]))
 
-    return clusters
+    zero_rows = np.flatnonzero(nonzero_coverage.sum(axis=1) == 0)
+    zero_cluster = []
+    for ind, test in enumerate(zero_rows):
+        zero_cluster.append((test, total_weighted_coverage[test]))
+
+    if len(zero_cluster) > 0:
+        clusters.append(zero_cluster)
+
+    print("len(zero_cluster): ", len(zero_cluster))
+
+    return clusters, zero_cluster
 
 
 def tcp_gclef_prioritization(clusters, coverage, inner_alg):
@@ -50,6 +61,9 @@ def tcp_gclef_prioritization(clusters, coverage, inner_alg):
             if test_id not in selected_tests:
                 ranks[len(selected_tests)] = test_id
                 selected_tests.add(test_id)
+
+    print("len(selected_tests: ", len(selected_tests), " test_num: ", test_num)
+    assert(len(selected_tests) == test_num)
 
     return ranks
 

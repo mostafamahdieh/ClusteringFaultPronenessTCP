@@ -5,7 +5,7 @@ import math
 from prioritization import prioritization_std as ps
 from sklearn.cluster import AgglomerativeClustering
 
-def clustering_agg(coverage, dp_unit_prob, distance_function, cluster_num):
+def clustering_agg(coverage, dp_unit_prob, distance_function, linkage_crit, cluster_num):
     print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
 
     distance = distance_function(coverage, coverage)
@@ -14,7 +14,6 @@ def clustering_agg(coverage, dp_unit_prob, distance_function, cluster_num):
 #    connectivity = similarity.copy()
 #    connectivity[connectivity > conn_eps] = 1
 #    connectivity[connectivity <= conn_eps] = 0
-
 
     fp_big_threshold = 0.2
     total_weighted_coverage = np.matmul(coverage, dp_unit_prob)
@@ -35,11 +34,12 @@ def clustering_agg(coverage, dp_unit_prob, distance_function, cluster_num):
 
     total_sorted_arg_des_subset = total_sorted_arg_des[:cluster_subset_num]
 
+    inf = 1.0e10
     for i in total_sorted_arg_des_subset:
         for j in total_sorted_arg_des_subset:
             distance[i, j] = inf
 
-    clustering = AgglomerativeClustering(n_clusters=cluster_num, linkage='average',
+    clustering = AgglomerativeClustering(n_clusters=cluster_num, linkage=linkage_crit,
                                          affinity='precomputed').fit(distance)
     print("Clustering finished.")
     return clustering
@@ -188,10 +188,10 @@ def compute_ordering_index(ordering):
     return ordering_index
 
 
-def create_clusters(coverage, dp_unit_prob, clustering_method, distance_function, cluster_num):
+def create_clusters(coverage, dp_unit_prob, clustering_method, distance_function, linkage, cluster_num):
     unit_num = coverage.shape[1]
 
-    clustering = clustering_method(coverage, dp_unit_prob, distance_function, cluster_num)
+    clustering = clustering_method(coverage, dp_unit_prob, distance_function, linkage, cluster_num)
     total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
 
     # constructing the clusters
