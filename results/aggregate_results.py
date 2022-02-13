@@ -12,8 +12,8 @@ def aggregate_results(file_names, projects, from_version, to_version, results_pa
     except:
         os.mkdir(results_path)
 
-    first_fail = pd.DataFrame(columns=['version'])
-    apfd = pd.DataFrame(columns=['version'])
+    first_fail = pd.DataFrame(columns=['project', 'version'])
+    apfd = pd.DataFrame(columns=['project', 'version'])
     for index, project in enumerate(projects):
         for version_number in range(from_version[index], to_version[index] + 1):
             data_path = "../WTP-data/%s/%d" % (project, version_number)
@@ -39,8 +39,8 @@ def aggregate_results(file_names, projects, from_version, to_version, results_pa
                 first_fail = first_fail.append(results_dict_first_fail, ignore_index=True)
                 apfd = apfd.append(results_dict_apfd, ignore_index=True)
 
-    first_fail_all = first_fail.reset_index()
-    apfd_all = apfd.reset_index()
+#    first_fail = first_fail.reset_index()
+#    apfd = apfd.reset_index()
 
-    first_fail_all.to_csv(results_path + '/first_fail_all.csv')
-    apfd_all.to_csv(results_path + '/apfd_all.csv')
+    first_fail.to_csv(results_path + '/first_fail_all.csv', index_label="index")
+    apfd.to_csv(results_path + '/apfd_all.csv', index_label="index")
