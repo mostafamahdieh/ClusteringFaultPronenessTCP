@@ -26,9 +26,9 @@ def read_results(file_names, project, from_version, to_version):
     apfd = pd.DataFrame(columns=['version'])
 
     for version_number in range(from_version, to_version):
-        data_path = "../../WTP-data/%s/%d" % (project, version_number)
-        results_dict_first_fail = {'version': version_number}
-        results_dict_apfd = {'version': version_number}
+        data_path = "../WTP-data/%s/%d" % (project, version_number)
+        results_dict_first_fail = {'version': version_number, 'project': project}
+        results_dict_apfd = {'version': version_number, 'project': project}
         skipped = False
 
         for file_name in file_names:
@@ -57,15 +57,11 @@ def aggregate_results(file_names, results_folder):
     from_version = [1, 1, 1, 1, 1]
     to_version = [26, 133, 65, 106, 26]
 
-    results_path = '../../WTP-data/aggregate/'+results_folder
+    results_path = '../WTP-data/aggregate/'+results_folder
     try:
         os.stat(results_path)
     except:
         os.mkdir(results_path)       
-
-    data_vals_stats = pd.DataFrame()
-    improvement_stats = pd.DataFrame(columns=["project", "improvement_clustering", "improvement_clustering_fp"])
-    first_fail_all = pd.DataFrame()
 
     for index, project in enumerate(projects):
         first_fail, apfd = read_results(file_names,
@@ -82,3 +78,4 @@ def aggregate_results(file_names, results_folder):
     apfd_all = apfd_all.reset_index()
 
     first_fail_all.to_csv(results_path+'/first_fail_all.csv')
+    apfd_all.to_csv(results_path+'/apfd_all.csv')
