@@ -10,13 +10,14 @@ for index, project in enumerate(projects):
 #    bug_prediction_data_path = 'bug_prediction_data/xgboost_res2/' + project + '.csv'
 #    bug_prediction_data_path = 'bug_prediction_data/xgboost_res1/' + project + '.csv'
 #    bug_prediction_data_path = 'bug_prediction_data/xgb_results_14001108_offline/' + project + '.csv'
-    bug_prediction_data_path = 'bug_prediction_data/cb_results_14001109_online/' + project + '.csv'
+#    bug_prediction_data_path = 'bug_prediction_data/cb_results_14001109_online/' + project + '.csv'
+    bug_prediction_data_path = 'bug_prediction_data/xgb_results_14001115_online/' + project + '.csv'
     print("Reading " + bug_prediction_data_path)
     bug_prediction_data = pd.read_csv(bug_prediction_data_path)
     print("done.")
     for version_number in range(from_version[index], to_version[index] + 1):
         print("* Version %d" % version_number)
-        run_standard2_prioritization(bug_prediction_data, 'cb_score_online', project, version_number,
-                                         [0.999], 'std_cb_results_14001109_online_c0999.csv',
-                                         ['std_cb_results_14001109_online_c0999'])
+        run_standard2_prioritization(bug_prediction_data, 'xgb_score_online', project, version_number,
+                                         [0.999], 'std_xgb_results_14001115_online_c0999.csv',
+                                         ['std_xgb_results_14001115_online_c0999'])
         print()

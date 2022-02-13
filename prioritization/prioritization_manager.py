@@ -3,18 +3,6 @@ import pandas
 from prioritization import prioritization_std as ps,  prioritization_core as pc, prioritization_clustering as pr_cl, prioritization_gclef as pr_gclef
 
 
-def extract_bug_prediction_for_units_version(bug_prediction_data, score_label, version, unit_names, unit_num):
-    unit_dp_prob = np.zeros((unit_num,))
-    for u in range(0, unit_num):
-        unit_class = str(unit_names[u])[2:].split('#')[0]
-        unit_class = unit_class.strip()
-        b_all = bug_prediction_data[bug_prediction_data.LongName == unit_class]
-        b = b_all[b_all.version == version]
-        if not b.empty:
-            unit_dp_prob[u] = b[score_label].max()
-    return unit_dp_prob
-
-
 def generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num):
     return (1 - c_dp) * np.ones((unit_num,)) + c_dp * dp_unit_prob
 
@@ -28,9 +16,20 @@ def run_standard2_prioritization(bug_prediction_data, score_label, project, vers
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
     failed_tests_ids = pc.read_failed_tests(data_path, test_names)
-    unit_num = coverage.shape[1]
 
-    dp_unit_prob = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, version_number, unit_names, unit_num)
+    test_num = coverage.shape[0]
+    unit_num = coverage.shape[1]
+    assert(test_num == len(test_names))
+    assert(unit_num == len(unit_names))
+
+    class_of_units, units_in_class, classes = extract_classes_in_data(unit_names, unit_num)
+    class_dp_prob = extract_bug_prediction_for_classes(bug_prediction_data, score_label, version_number, classes)
+
+    class_num = len(classes);
+
+    print("test_num: ", test_num, " unit_num: ", unit_num, " class_num: ", class_num)
+
+    dp_unit_prob = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, class_of_units, class_dp_prob)
 
     if np.size(failed_tests_ids) == 0:
         print("No Tests found in coverage values, skipping version")
@@ -139,6 +138,17 @@ def extract_bug_prediction_for_classes(bug_prediction_data, score_label, version
     return class_dp_prob
 
 
+def extract_bug_prediction_for_units_version(bug_prediction_data, score_label, class_of_units, class_dp_prob):
+    unit_num = len(class_of_units)
+    unit_dp_prob = np.zeros((unit_num,))
+    for u in range(0, unit_num):
+        unit_class = class_of_units[u]
+        if unit_class in class_dp_prob:
+            unit_dp_prob[u] = class_dp_prob[unit_class]
+
+    return unit_dp_prob
+
+
 def run_gclef_prioritization(bug_prediction_data, score_label, project, version_number, filename, alg_prefix):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
@@ -177,13 +187,13 @@ def run_gclef_prioritization(bug_prediction_data, score_label, project, version_
 #        if (test_total_coverage >= 0.01)
         print("test ", test_names[test_id], " (", test_id ,") with total coverage ", test_total_coverage)
         test_covers_unknown_classes = False
-        if test_total_coverage >= 0.01:
+        if test_total_coverage >= 1:
             for u in np.flatnonzero(coverage[test_id]>0):
                 print(unit_names[u], " -> ", coverage[test_id][u], ", is in classes: ",  class_of_units[u], class_of_units[u] in dp_classes)
                 if not class_of_units[u] in dp_classes:
                     test_covers_unknown_classes = True
         if not test_covers_unknown_classes:
-            assert(test_total_coverage < 0.01)
+            assert(test_total_coverage < 1)
 
     additional_ordering = pr_gclef.tcp_gclef_prioritization(clusters, coverage, 'additional')
     additional_apfd = pc.rank_evaluation_apfd(additional_ordering, failed_tests_ids)
@@ -212,9 +222,20 @@ def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, 
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
     failed_tests_ids = pc.read_failed_tests(data_path, test_names)
-    unit_num = coverage.shape[1]
 
-    dp_unit_prob = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, version_number, unit_names, unit_num)
+    test_num = coverage.shape[0]
+    unit_num = coverage.shape[1]
+    assert(test_num == len(test_names))
+    assert(unit_num == len(unit_names))
+
+    class_of_units, units_in_class, classes = extract_classes_in_data(unit_names, unit_num)
+    class_dp_prob = extract_bug_prediction_for_classes(bug_prediction_data, score_label, version_number, classes)
+
+    class_num = len(classes);
+
+    print("test_num: ", test_num, " unit_num: ", unit_num, " class_num: ", class_num)
+
+    dp_unit_prob = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, class_of_units, class_dp_prob)
 
     if np.size(failed_tests_ids) == 0:
         print("No Tests found in coverage values, skipping version")

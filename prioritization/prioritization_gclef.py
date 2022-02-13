@@ -14,7 +14,7 @@ def create_gclef_clusters(coverage, unit_names, units_in_class, sorted_classes_l
             unit_class_matrix[u][ind] = 1
 
     test_class_coverage = np.matmul(coverage, unit_class_matrix)
-    nonzero_coverage = test_class_coverage > 0.001
+    nonzero_coverage = test_class_coverage >= 0.1
     nonzero_tests, nonzero_classes = np.where(nonzero_coverage)
     
     clusters = [[] for c in range(0, class_num)]
@@ -40,30 +40,37 @@ def tcp_gclef_prioritization(clusters, coverage, inner_alg):
     unit_num = coverage.shape[1]
 
     # inner cluster prioritization
+    selected_tests = set()
     rearranged_clusters = []
     for cluster_ind in range(0, len(clusters)):
+        unique_cluster = []
+        for (test_id, tot_weight) in clusters[cluster_ind]:
+            if test_id not in selected_tests:
+                unique_cluster.append((test_id, tot_weight))
+                selected_tests.add(test_id)
+        print("rearrenging cluster #", cluster_ind, " with size ", len(unique_cluster))
         if inner_alg == 'total':
-            rearranged_cluster = pr_cl.rearrange_tests_total(clusters[cluster_ind])
+            rearranged_cluster = pr_cl.rearrange_tests_total(unique_cluster)
         elif inner_alg == 'additional':
-            rearranged_cluster = pr_cl.rearrange_tests_additional(clusters[cluster_ind], coverage, np.ones((unit_num,)))
+            rearranged_cluster = pr_cl.rearrange_tests_additional(unique_cluster, coverage, np.ones((unit_num,)))
         else:
             raise Exception("Bad value for inner_alg: " + str(inner_alg))
 
-        assert len(clusters[cluster_ind]) == len(rearranged_cluster)
-        # print(cluster_ind,": ",rearranged_cluster)
+        assert len(unique_cluster) == len(rearranged_cluster)
         rearranged_clusters.append(rearranged_cluster)
-
-    ranks = np.zeros((test_num,))
-    selected_tests = set()
-
-    for cluster in rearranged_clusters:
-        for (test_id, tot_weight) in cluster:
-            if test_id not in selected_tests:
-                ranks[len(selected_tests)] = test_id
-                selected_tests.add(test_id)
 
     print("len(selected_tests: ", len(selected_tests), " test_num: ", test_num)
     assert(len(selected_tests) == test_num)
+
+    ranks = np.zeros((test_num,))
+
+    added_tests = 0
+    for cluster in rearranged_clusters:
+        for (test_id, tot_weight) in cluster:
+            ranks[added_tests] = test_id
+            added_tests = added_tests+1
+
+    assert(added_tests == test_num)
 
     return ranks
 
