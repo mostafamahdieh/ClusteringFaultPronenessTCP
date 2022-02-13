@@ -126,34 +126,9 @@ def determine_best_params_and_threshold_cv(dataframe, cache_file='xgb_cv_params_
     return params_dict, thresholds_dict
 
 
-# TODO: integrate this with the non cached version
-def determine_best_params_and_threshold_cv_cache(logs_file='xgb_cv_results.pkl'):
-    print('determining the params via cross-validation hyper parameter tuning and its thresholds')
-    logs_path = os.path.join(CACHE_DIR, logs_file)
-    if os.path.exists(logs_path):
-       with open(logs_path, 'rb') as logs_fd:
-        results_dict = pickle.load(logs_fd)
-    else:
-        raise RuntimeError(f"cv logs file not present")
-
-    projects = results_dict.keys()
-    thresholds_dict = {}
-    params_dict = {}
-    for project in projects:
-        results = results_dict[project]
-        best_models = results[results.test_score == results.iloc[0].test_score]
-        best_models['robustness'] = best_models.params.apply(lambda x: x['n_estimators']/x['max_depth'])
-        best_model = best_models.sort_values(by=['robustness'], ascending=[False]).iloc[0]
-        thresholds_dict[project] = best_model.threshold
-        params_dict[project] = best_model.params
-
-    return params_dict, thresholds_dict
-
-
 def train_model_offline_learning(dataframe):
     # Determine best params and thresholds using cross-validation
     params_dict, thresholds_dict = determine_best_params_and_threshold_cv(dataframe)
-    # params_dict, thresholds_dict = determine_best_params_and_threshold_cv_cache()
 
     sampled_dataframe = subsample_tarin_data(dataframe, 0.05)
 
@@ -185,6 +160,14 @@ def train_model_offline_learning(dataframe):
         scores['threshold'] = thresholds_dict[project]
         scores_list.append(scores)
 
+        train_test_columns = sampled_dataframe.drop(
+            columns=["before_bugs", "after_bugs", "is_buggy",
+                     "LongName", "Name", "Path", "project", "version"]
+        ).columns
+        used_columns_indices = clf.feature_importances_ > 0
+        print(sorted(zip(clf.feature_importances_[used_columns_indices], train_test_columns[used_columns_indices]),
+                     key=lambda x: -x[0]))
+
         # Re run inference on all of the project data
         result_indices = (dataframe.project == project)
         x_result = drop_non_numerical(dataframe[result_indices])
@@ -205,7 +188,6 @@ def train_model_offline_learning(dataframe):
 def train_model_online_learning(dataframe):
     # Determine best params and thresholds using cross-validation
     params_dict, thresholds_dict = determine_best_params_and_threshold_cv(dataframe)
-    # params_dict, thresholds_dict = determine_best_params_and_threshold_cv_cache()
 
     sampled_dataframe = subsample_tarin_data(dataframe, 0.05)
 
