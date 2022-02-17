@@ -29,8 +29,18 @@ def aggregate_results(file_names, projects, from_version, to_version, results_pa
                     results = pd.read_csv(file_path, delimiter=',')
 
                     for i, row in results.iterrows():
-                        results_dict_first_fail[row['alg']] = row['first_fail'] * 100
-                        results_dict_apfd[row['alg']] = row['apfd']
+                        alg = row['alg']
+
+                        if alg in results_dict_first_fail:
+                            print('Name clash occured for algorithm: ', alg)
+                            assert(not alg in results_dict_first_fail)
+
+                        if alg in results_dict_apfd:
+                            print('Name clash occured for algorithm: ', alg)
+                            assert(not alg in results_dict_apfd)
+
+                        results_dict_first_fail[alg] = row['first_fail'] * 100
+                        results_dict_apfd[alg] = row['apfd']
                 else:
                     print("Skipping %s" % file_path)
                     skipped = True
