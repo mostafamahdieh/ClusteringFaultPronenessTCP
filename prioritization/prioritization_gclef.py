@@ -14,7 +14,7 @@ def create_gclef_clusters(coverage, unit_names, units_in_class, sorted_classes_l
             unit_class_matrix[u][ind] = 1
 
     test_class_coverage = np.matmul(coverage, unit_class_matrix)
-    nonzero_coverage = test_class_coverage >= 0.1
+    nonzero_coverage = test_class_coverage >= 0.001
     nonzero_tests, nonzero_classes = np.where(nonzero_coverage)
     
     clusters = [[] for c in range(0, class_num)]
