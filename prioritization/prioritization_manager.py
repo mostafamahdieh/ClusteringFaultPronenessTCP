@@ -183,11 +183,11 @@ def extract_bug_prediction_for_classes(bug_prediction_data, score_label, version
                 if not b.empty:
                     class_dp_prob[original_code_class] = b[score_label].max()
                     break
-                else:
-                    print(code_class, " not found")
+#                else:
+#                    print(code_class, " not found")
                 if retry > 1:
                     code_class = code_class.rsplit('.',1)[0]
-                    print("retry. searching for: ", code_class)
+#                    print("retry. searching for: ", code_class)
 
 
     return class_dp_prob
@@ -240,11 +240,11 @@ def run_gclef_prioritization(bug_prediction_data, score_label, project, version_
 #    print("zero_cluster tests:")
     for (test_id, test_total_coverage) in zero_cluster:
 #        if (test_total_coverage >= 0.01)
-        print("test ", test_names[test_id], " (", test_id ,") with total coverage ", test_total_coverage)
+        #print("test ", test_names[test_id], " (", test_id ,") with total coverage ", test_total_coverage)
         test_covers_unknown_classes = False
         if test_total_coverage >= 1:
             for u in np.flatnonzero(coverage[test_id]>0):
-                print(unit_names[u], " -> ", coverage[test_id][u], ", is in classes: ",  class_of_units[u], class_of_units[u] in dp_classes)
+        #        print(unit_names[u], " -> ", coverage[test_id][u], ", is in classes: ",  class_of_units[u], class_of_units[u] in dp_classes)
                 if not class_of_units[u] in dp_classes:
                     test_covers_unknown_classes = True
         if not test_covers_unknown_classes:
