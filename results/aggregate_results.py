@@ -14,6 +14,9 @@ def aggregate_results(file_names, projects, from_version, to_version, results_pa
 
     first_fail = pd.DataFrame(columns=['version'])
     apfd = pd.DataFrame(columns=['version'])
+
+
+
     for index, project in enumerate(projects):
         for version_number in range(from_version[index], to_version[index] + 1):
             data_path = "../WTP-data/%s/%d" % (project, version_number)
