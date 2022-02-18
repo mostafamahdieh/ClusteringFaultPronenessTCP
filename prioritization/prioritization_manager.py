@@ -1,14 +1,18 @@
 import numpy as np
 import pandas
-from prioritization import prioritization_std as ps,  prioritization_core as pc, prioritization_clustering as pr_cl, prioritization_gclef as pr_gclef
+from prioritization import prioritization_std as ps, prioritization_core as pc, prioritization_clustering as pr_cl, \
+    prioritization_gclef as pr_gclef
 
 
 def generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num):
     return (1 - c_dp) * np.ones((unit_num,)) + c_dp * dp_unit_prob
 
 
-def alg_to_char(alg_type):
-    return alg_type[0]
+alg_shortname_dict = dict({"max": "max", "total": "tot", "additional": "add"})
+
+
+def alg_shortname(alg_type):
+    return alg_shortname_dict[alg_type]
 
 
 def run_standard2_prioritization(project, version_number, filename, alg_prefix):
@@ -19,8 +23,8 @@ def run_standard2_prioritization(project, version_number, filename, alg_prefix):
 
     test_num = coverage.shape[0]
     unit_num = coverage.shape[1]
-    assert(test_num == len(test_names))
-    assert(unit_num == len(unit_names))
+    assert (test_num == len(test_names))
+    assert (unit_num == len(unit_names))
 
     class_of_units, units_in_class, classes = extract_classes_in_data(unit_names, unit_num)
     class_num = len(classes);
@@ -66,7 +70,9 @@ def run_standard2_prioritization(project, version_number, filename, alg_prefix):
     print()
     f.close()
 
-def run_standard2_prioritization_fp(bug_prediction_data, score_label, project, version_number, c_dp_values, filename, alg_prefix):
+
+def run_standard2_prioritization_fp(bug_prediction_data, score_label, project, version_number, c_dp_values, filename,
+                                    alg_prefix):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
@@ -74,8 +80,8 @@ def run_standard2_prioritization_fp(bug_prediction_data, score_label, project, v
 
     test_num = coverage.shape[0]
     unit_num = coverage.shape[1]
-    assert(test_num == len(test_names))
-    assert(unit_num == len(unit_names))
+    assert (test_num == len(test_names))
+    assert (unit_num == len(unit_names))
 
     class_of_units, units_in_class, classes = extract_classes_in_data(unit_names, unit_num)
     class_dp_prob = extract_bug_prediction_for_classes(bug_prediction_data, score_label, version_number, classes)
@@ -84,7 +90,8 @@ def run_standard2_prioritization_fp(bug_prediction_data, score_label, project, v
 
     print("test_num: ", test_num, " unit_num: ", unit_num, " class_num: ", class_num)
 
-    dp_unit_prob = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, class_of_units, class_dp_prob)
+    dp_unit_prob = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, class_of_units,
+                                                            class_dp_prob)
 
     if np.size(failed_tests_ids) == 0:
         print("No Tests found in coverage values, skipping version")
@@ -130,7 +137,7 @@ def run_standard2_prioritization_fp(bug_prediction_data, score_label, project, v
 
 def is_remaining_coverage_zero(cluster, test_used):
     eps = 1e-8
-    for (test_ind, total_coverage) in cluster:
+    for (test_ind, total_coverage, max_coverage) in cluster:
         if not test_used[test_ind] and total_coverage > eps:
             return False
     return True
@@ -156,12 +163,11 @@ def extract_classes_in_data(unit_names, unit_num):
 
         subclass = unit_class
         for retry in range(2):
-            subclass = subclass.rsplit('.',1)[0]
+            subclass = subclass.rsplit('.', 1)[0]
             if subclass in classes:
                 units_in_class[subclass].append(u)
 
-
-    assert(len(class_of_units) == unit_num)
+    assert (len(class_of_units) == unit_num)
 
     return class_of_units, units_in_class, classes
 
@@ -169,11 +175,11 @@ def extract_classes_in_data(unit_names, unit_num):
 def extract_bug_prediction_for_classes(bug_prediction_data, score_label, version, classes):
     class_dp_prob = dict()
 
-    #pandas.set_option('display.max_rows', 10000)
-    #pandas.set_option('display.max_columns', 1000)
+    # pandas.set_option('display.max_rows', 10000)
+    # pandas.set_option('display.max_columns', 1000)
 
     b_version = bug_prediction_data[bug_prediction_data.version == version]
-    #print(b_version)
+    # print(b_version)
 
     for code_class in classes:
         if not code_class in class_dp_prob:
@@ -183,12 +189,11 @@ def extract_bug_prediction_for_classes(bug_prediction_data, score_label, version
                 if not b.empty:
                     class_dp_prob[original_code_class] = b[score_label].max()
                     break
-#                else:
-#                    print(code_class, " not found")
+                #                else:
+                #                    print(code_class, " not found")
                 if retry > 1:
-                    code_class = code_class.rsplit('.',1)[0]
-#                    print("retry. searching for: ", code_class)
-
+                    code_class = code_class.rsplit('.', 1)[0]
+    #                    print("retry. searching for: ", code_class)
 
     return class_dp_prob
 
@@ -215,8 +220,8 @@ def run_gclef_prioritization(bug_prediction_data, score_label, project, version_
 
     test_num = coverage.shape[0]
     unit_num = coverage.shape[1]
-    assert(test_num == len(test_names))
-    assert(unit_num == len(unit_names))
+    assert (test_num == len(test_names))
+    assert (unit_num == len(unit_names))
 
     class_of_units, units_in_class, classes = extract_classes_in_data(unit_names, unit_num)
     class_dp_prob = extract_bug_prediction_for_classes(bug_prediction_data, score_label, version_number, classes)
@@ -225,10 +230,10 @@ def run_gclef_prioritization(bug_prediction_data, score_label, project, version_
 
     print("test_num: ", test_num, " unit_num: ", unit_num, " class_num: ", class_num)
 
-    assert(len(units_in_class.items()) == class_num)
-    assert(len(class_of_units) == unit_num)
+    assert (len(units_in_class.items()) == class_num)
+    assert (len(class_of_units) == unit_num)
     print("len(class_dp_prob.items()): ", len(class_dp_prob.items()))
-#    assert(len(class_dp_prob.items()) == class_num)
+    #    assert(len(class_dp_prob.items()) == class_num)
 
     # sort classes in decreasing order of fault-proneness
     dp_classes = class_dp_prob.items()
@@ -237,18 +242,18 @@ def run_gclef_prioritization(bug_prediction_data, score_label, project, version_
     # create clusters of test cases where each cluster covers a class. clusters might have redundant test cases
     clusters, zero_cluster = pr_gclef.create_gclef_clusters(coverage, unit_names, units_in_class, sorted_classes_list)
 
-#    print("zero_cluster tests:")
-    for (test_id, test_total_coverage) in zero_cluster:
-#        if (test_total_coverage >= 0.01)
-        #print("test ", test_names[test_id], " (", test_id ,") with total coverage ", test_total_coverage)
+    #    print("zero_cluster tests:")
+    for (test_id, test_total_coverage, max_coverage) in zero_cluster:
+        #        if (test_total_coverage >= 0.01)
+        # print("test ", test_names[test_id], " (", test_id ,") with total coverage ", test_total_coverage)
         test_covers_unknown_classes = False
         if test_total_coverage >= 1:
-            for u in np.flatnonzero(coverage[test_id]>0):
-        #        print(unit_names[u], " -> ", coverage[test_id][u], ", is in classes: ",  class_of_units[u], class_of_units[u] in dp_classes)
+            for u in np.flatnonzero(coverage[test_id] > 0):
+                #        print(unit_names[u], " -> ", coverage[test_id][u], ", is in classes: ",  class_of_units[u], class_of_units[u] in dp_classes)
                 if not class_of_units[u] in dp_classes:
                     test_covers_unknown_classes = True
         if not test_covers_unknown_classes:
-            assert(test_total_coverage < 1)
+            assert (test_total_coverage < 1)
 
     additional_ordering = pr_gclef.tcp_gclef_prioritization(clusters, coverage, 'additional')
     additional_apfd = pc.rank_evaluation_apfd(additional_ordering, failed_tests_ids)
@@ -272,8 +277,9 @@ def run_gclef_prioritization(bug_prediction_data, score_label, project, version_
     f.close()
 
 
-def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, version_number, clustering_method, distance_function, linkage, inner_prioritizations, 
-        cluster_nums, c_dp_values, filename, alg_prefix):
+def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, version_number, clustering_method,
+                                     distance_function, linkage, inner_prioritizations,
+                                     cluster_nums, c_dp_values, filename, alg_prefix):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
@@ -281,8 +287,8 @@ def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, 
 
     test_num = coverage.shape[0]
     unit_num = coverage.shape[1]
-    assert(test_num == len(test_names))
-    assert(unit_num == len(unit_names))
+    assert (test_num == len(test_names))
+    assert (unit_num == len(unit_names))
 
     class_of_units, units_in_class, classes = extract_classes_in_data(unit_names, unit_num)
     class_dp_prob = extract_bug_prediction_for_classes(bug_prediction_data, score_label, version_number, classes)
@@ -291,7 +297,7 @@ def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, 
 
     print("test_num: ", test_num, " unit_num: ", unit_num, " class_num: ", class_num)
 
-    dp_unit_prob = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, class_of_units, class_dp_prob)
+    unit_dp = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, class_of_units, class_dp_prob)
 
     if np.size(failed_tests_ids) == 0:
         print("No Tests found in coverage values, skipping version")
@@ -301,28 +307,39 @@ def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, 
     f.write("alg,first_fail,apfd\n")
 
     for ind, c_dp in enumerate(c_dp_values):
+        unit_fp = generate_weighted_unit_fp(c_dp, unit_dp, unit_num)
         for cluster_num in cluster_nums:
-            unit_fp = generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num)
+            clusters, clustering = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
+                                                         distance_function, linkage, cluster_num, c_dp != 0)
 
-            if c_dp == 0:
-                clusters, clustering = pr_cl.create_clusters(coverage, np.zeros(unit_num), clustering_method, distance_function, linkage, cluster_num)
-            else:
-                clusters, clustering = pr_cl.create_clusters(coverage, dp_unit_prob, clustering_method, distance_function, linkage, cluster_num)
+            cluster_sizes = []
+            for cluster in clusters:
+                cluster_sizes.append(len(cluster))
+
+            cluster_sizes.sort(reverse=True)
+            print("cluster_sizes: ", cluster_sizes)
 
             for inner_prioritization in inner_prioritizations:
                 print("Running tcp_clustering_inner_outer_fp for c_dp: ", c_dp, " inner alg: ", inner_prioritization)
-                ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_prioritization, 'total')
+                if inner_prioritization == 'max':
+                    outer_prioritization = 'max'
+                else:
+                    outer_prioritization = 'total'
+                ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_prioritization,
+                                                         outer_prioritization)
                 first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)
                 apfd = pc.rank_evaluation_apfd(ranks, failed_tests_ids)
                 print("first_fail: ", first_fail, " apfd: ", apfd)
-                result_line = "%s_%s_clus%d,%f,%f" % (alg_prefix[ind], alg_to_char(inner_prioritization), cluster_num, first_fail, apfd)
+                result_line = "%s_%s_clus%d,%f,%f" % (
+                alg_prefix[ind], alg_shortname(inner_prioritization), cluster_num, first_fail, apfd)
                 f.write(result_line + "\n")
 
     print()
     f.close()
 
 
-def run_prioritization_clustering(project, version_number, clustering_method, distance_function, linkage, cluster_nums, filename, alg_prefix):
+def run_prioritization_clustering(project, version_number, clustering_method, distance_function, linkage, cluster_nums,
+                                  filename, alg_prefix):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
@@ -336,8 +353,10 @@ def run_prioritization_clustering(project, version_number, clustering_method, di
     f = open('%s/%s' % (data_path, filename), "w+")
     f.write("alg,first_fail,apfd\n")
 
+    unit_fp = np.ones(unit_num)
     for cluster_num in cluster_nums:
-        clusters, clustering = pr_cl.create_clusters(coverage, np.zeros(unit_num), clustering_method, distance_function, linkage, cluster_num)
+        clusters, clustering = pr_cl.create_clusters(coverage, unit_fp, unit_fp, clustering_method,
+                                                     distance_function, linkage, cluster_num, False)
 
         ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, 'additional', 'total')
         first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)
@@ -350,4 +369,3 @@ def run_prioritization_clustering(project, version_number, clustering_method, di
 
     print()
     f.close()
-

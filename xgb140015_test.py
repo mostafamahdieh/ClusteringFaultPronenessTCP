@@ -4,15 +4,15 @@ from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import nan_euclidean_distances
 from sklearn.neighbors import DistanceMetric
 from sklearn.preprocessing import Normalizer
-from prioritization.prioritization_clustering import clustering_agg
+from prioritization.prioritization_clustering import clustering_agg, clustering_agg_nonprecomputed, clustering_agg2, clustering_agg3
 from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.metrics.pairwise import cosine_distances
 
 projects = ['Chart']
 #projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
 from_version = [1, 1, 1, 1, 1]
-to_version = [26, 133, 65, 106, 26]
-#to_version = [26, 133, 65, 106, 27]
+#to_version = [3, 133, 65, 106, 26]
+to_version = [26, 133, 65, 106, 27]
 
 
 for index, project in enumerate(projects):
@@ -26,7 +26,18 @@ for index, project in enumerate(projects):
     print("done.")
     for version_number in range(from_version[index], to_version[index] + 1):
         print("* Version %d" % version_number)
-        run_prioritization_clustering_fp(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg, euclidean_distances, 'average', ['total', 'additional'], [350],
-                                         [0.999], 'eucl_xgb14001115_test_350.csv',
-                                         ['eucl_xgb14001115_test_350_c999'])
+
+        run_prioritization_clustering_fp(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg2, euclidean_distances, 'average', ['total', 'max', 'additional'], [500],
+                                         [0.999], 'eucl_xgb14001115_test.csv',
+                                         ['eucl_xgb14001115_test_c999'])
+
+#        run_prioritization_clustering_fp(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg3,
+#                                     'euclidean', 'average', ['total', 'max', 'additional'], [50],
+#                                     [0.999], 'eucl_xgb14001115_test.csv',
+#                                     ['eucl_xgb14001115_test_c999'])
+
+#        run_prioritization_clustering_fp(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg_nonprecomputed, 'euclidean', 'average', ['total', 'max', 'additional'], [500],
+#                                         [0.999], 'eucl_xgb14001115_test.csv',
+#                                         ['eucl_xgb14001115_test_c999'])
+
         print()

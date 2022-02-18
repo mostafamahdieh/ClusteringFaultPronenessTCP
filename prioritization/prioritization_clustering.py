@@ -1,47 +1,51 @@
 import numpy as np
 import operator
 import math
+import copy
 
 from prioritization import prioritization_std as ps
 from sklearn.cluster import AgglomerativeClustering
 
-def clustering_agg(coverage, dp_unit_prob, distance_function, linkage_crit, cluster_num):
+
+def clustering_agg(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
     print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
 
     distance = distance_function(coverage, coverage)
 
-#    conn_eps = 0.01
-#    connectivity = similarity.copy()
-#    connectivity[connectivity > conn_eps] = 1
-#    connectivity[connectivity <= conn_eps] = 0
-
-    fp_big_threshold = 0.001
-    total_weighted_coverage = np.matmul(coverage, dp_unit_prob)
-    total_sorted_arg = np.argsort(total_weighted_coverage)
-    cluster_subset_maxsize = math.floor(cluster_num/2)
-    total_sorted_arg_des = total_sorted_arg[::-1]
+    #    conn_eps = 0.01
+    #    connectivity = similarity.copy()
+    #    connectivity[connectivity > conn_eps] = 1
+    #    connectivity[connectivity <= conn_eps] = 0
 
     print("coverage shape: ", np.shape(coverage))
     print("distance shape: ", np.shape(distance))
-    print("total_weighted_coverage shape: ", np.shape(total_weighted_coverage))
-    print("number of total_weighted_coverage >= ", fp_big_threshold, ": ", np.sum(total_weighted_coverage >= fp_big_threshold))
-    print("cluster_subset_maxsize: ", cluster_subset_maxsize)
-    print("total_weighted_coverage[total_sorted_des[", 0, "]]: ",
-          total_weighted_coverage[total_sorted_arg_des[0]])
-    print("total_weighted_coverage[total_sorted_des[", math.floor(cluster_subset_maxsize/2)-1, "]]: ",
-          total_weighted_coverage[total_sorted_arg_des[math.floor(cluster_subset_maxsize/2)-1]])
-    print("total_weighted_coverage[total_sorted_des[", cluster_subset_maxsize-1, "]]: ",
-          total_weighted_coverage[total_sorted_arg_des[cluster_subset_maxsize-1]])
 
-    cluster_subset_num = min(np.sum(total_weighted_coverage >= fp_big_threshold), cluster_subset_maxsize)
-    print("cluster_subset_num: ", cluster_subset_num)
+    if use_fp:
+        fp_big_threshold = 10.0
+        total_dp_coverage = np.matmul(coverage, unit_dp)
+        total_sorted_arg = np.argsort(total_dp_coverage)
+        cluster_subset_maxsize = math.floor(cluster_num)
+        total_sorted_arg_des = total_sorted_arg[::-1]
+        cluster_subset_num = min(np.sum(total_dp_coverage >= fp_big_threshold), cluster_subset_maxsize)
+        print("total_dp_coverage shape: ", np.shape(total_dp_coverage))
+        print("cluster_subset_num: ", cluster_subset_num)
 
-    total_sorted_arg_des_subset = total_sorted_arg_des[:cluster_subset_num]
+        print("number of total_dp_coverage >= ", fp_big_threshold, ": ",
+              np.sum(total_dp_coverage >= fp_big_threshold))
+        print("cluster_subset_maxsize: ", cluster_subset_maxsize)
+        print("total_dp_coverage[total_sorted_des[", 0, "]]: ",
+              total_dp_coverage[total_sorted_arg_des[0]])
+        print("total_dp_coverage[total_sorted_des[", math.floor(cluster_subset_maxsize / 2) - 1, "]]: ",
+              total_dp_coverage[total_sorted_arg_des[math.floor(cluster_subset_maxsize / 2) - 1]])
+        print("total_dp_coverage[total_sorted_des[", cluster_subset_maxsize - 1, "]]: ",
+              total_dp_coverage[total_sorted_arg_des[cluster_subset_maxsize - 1]])
 
-    inf = 1.0e10
-    for i in total_sorted_arg_des_subset:
-        for j in total_sorted_arg_des_subset:
-            distance[i, j] = inf
+        total_sorted_arg_des_subset = total_sorted_arg_des[:cluster_subset_num]
+
+        inf = 1.0e10
+        for i in total_sorted_arg_des_subset:
+            for j in total_sorted_arg_des_subset:
+                distance[i, j] = inf
 
     clustering = AgglomerativeClustering(n_clusters=cluster_num, linkage=linkage_crit,
                                          affinity='precomputed').fit(distance)
@@ -49,30 +53,57 @@ def clustering_agg(coverage, dp_unit_prob, distance_function, linkage_crit, clus
     return clustering
 
 
-def tcp_full_total(clusters, test_num):
-    for cluster_ind in range(0, len(clusters)):
-        clusters[cluster_ind].sort(key=operator.itemgetter(1), reverse=True)  # sort by second value of tuple
+def clustering_agg2(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
+    print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
 
-    ranks = []
-    selection_round = 0
+    if use_fp:
+        coverage = np.multiply(coverage, unit_fp)
 
-    while len(ranks) < test_num:
-        for cluster_ind in range(0, len(clusters)):
-            if selection_round < len(clusters[cluster_ind]):
-                ranks.append(clusters[cluster_ind][selection_round][0])
-        selection_round = selection_round + 1
+    distance = distance_function(coverage, coverage)
 
-    return ranks
+    print("coverage shape: ", np.shape(coverage))
+
+    clustering = AgglomerativeClustering(n_clusters=cluster_num, linkage=linkage_crit,
+                                         affinity='precomputed').fit(distance)
+    print("Clustering finished.")
+    return clustering
+
+
+def clustering_agg3(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
+    print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
+
+    if use_fp:
+        coverage = np.multiply(coverage, unit_fp)
+
+    print("coverage shape: ", np.shape(coverage))
+
+    clustering = AgglomerativeClustering(n_clusters=cluster_num, affinity=distance_function, linkage=linkage_crit).fit(coverage)
+
+    print("Clustering finished.")
+    return clustering
+
+def clustering_agg_nonprecomputed(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
+    print("Running agglomerative clustering (distance = %s, linkage = %s, cluster_num = %d)..." % (distance_function, linkage_crit, cluster_num))
+
+    print("coverage shape: ", np.shape(coverage))
+
+    clustering = AgglomerativeClustering(n_clusters=cluster_num, affinity=distance_function, linkage=linkage_crit).fit(coverage)
+    print("Clustering finished.")
+    return clustering
 
 
 def rearrange_tests_total(cluster):
     return sorted(cluster, key=operator.itemgetter(1), reverse=True)  # sort by second value of tuple
 
 
-def is_remaining_coverage_zero(cluster, testUsed):
+def rearrange_tests_max(cluster):
+    return sorted(cluster, key=operator.itemgetter(2), reverse=True)  # sort by second value of tuple
+
+
+def is_remaining_coverage_zero(cluster, test_used):
     eps = 1e-8
-    for (test_ind, total_coverage) in cluster:
-        if not testUsed[test_ind] and total_coverage > eps:
+    for (test_ind, total_coverage, max_coverage) in cluster:
+        if not test_used[test_ind] and total_coverage > eps:
             return False
     return True
 
@@ -84,23 +115,23 @@ def rearrange_tests_additional(cluster, coverage, unit_fp):
 
     test_used = [False] * test_num  # none of the tests are used at the beginning
     unit_coverage = np.ones((unit_num,))
-    total_weighted_coverage = np.matmul(coverage, unit_fp)
-    additional_weighted_coverage = np.array(total_weighted_coverage)
+    total_fp_coverage = np.matmul(coverage, unit_fp)
+    additional_weighted_coverage = np.array(total_fp_coverage)
 
     rearranged_cluster = []
     while len(rearranged_cluster) < len(cluster):
         if is_remaining_coverage_zero(cluster, test_used):
-            for (test_ind, total_coverage) in cluster:
+            for (test_ind, total_coverage, max_coverage) in cluster:
                 if not test_used[test_ind]:
                     test_used[test_ind] = True
-                    rearranged_cluster.append((test_ind, total_coverage))
+                    rearranged_cluster.append((test_ind, total_coverage, max_coverage))
             break
 
         best_coverage = -1
         best_test = None
 
         # finding test with most coverage
-        for (test_ind, total_coverage) in cluster:
+        for (test_ind, total_coverage, max_coverage) in cluster:
             if not test_used[test_ind] and additional_weighted_coverage[test_ind] > best_coverage:
                 best_test = test_ind
                 best_coverage = additional_weighted_coverage[test_ind]
@@ -114,25 +145,24 @@ def rearrange_tests_additional(cluster, coverage, unit_fp):
             additional_weighted_coverage -= np.matmul(coverage, np.multiply(coverage_diff, unit_fp))
             unit_coverage = new_unit_coverage
             test_used[best_test] = True
-            rearranged_cluster.append((best_test, total_weighted_coverage[best_test]))
+            rearranged_cluster.append((best_test, total_fp_coverage[best_test]))
         else:
-            additional_weighted_coverage = np.array(total_weighted_coverage)
+            additional_weighted_coverage = np.array(total_fp_coverage)
             unit_coverage = np.ones((unit_num,))
 
     return rearranged_cluster
 
 
-def change_clusters_total_coverage(clusters, total_weighted_coverage):
+def copy_clusters(clusters):
     new_clusters = []
     for cluster in clusters:
         new_cluster = []
-        for (test_ind, total_coverage) in cluster:
-            new_cluster.append((test_ind, total_weighted_coverage[test_ind]))
+        for point in cluster:
+            new_cluster.append(point)
 
         new_clusters.append(new_cluster)
 
     return new_clusters
-
 
 # inner_alg: 1 for total, 2 for additional
 # outer_alg: 0 for nothing, 1 for total, 2 for additional
@@ -140,8 +170,7 @@ def tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_alg, outer_alg
     test_num = coverage.shape[0]
     unit_num = coverage.shape[1]
 
-    total_weighted_coverage = np.matmul(coverage, unit_fp)
-    clusters = change_clusters_total_coverage(clusters, total_weighted_coverage)
+    clusters = copy_clusters(clusters)
 
     # inner cluster prioritization
     rearranged_clusters = []
@@ -150,6 +179,8 @@ def tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_alg, outer_alg
             rearranged_cluster = rearrange_tests_total(clusters[cluster_ind])
         elif inner_alg == 'additional':
             rearranged_cluster = rearrange_tests_additional(clusters[cluster_ind], coverage, unit_fp)
+        elif inner_alg == 'max':
+            rearranged_cluster = rearrange_tests_max(clusters[cluster_ind])
         else:
             raise Exception("Bad value for inner_alg: " + str(inner_alg))
 
@@ -173,6 +204,8 @@ def tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_alg, outer_alg
             selected_tests = rearrange_tests_total(selected_tests)
         elif outer_alg == 'additional':
             selected_tests = rearrange_tests_additional(selected_tests, coverage, unit_fp)
+        elif outer_alg == 'max':
+            selected_tests = rearrange_tests_max(selected_tests)
         else:
             raise Exception("Bad value for outer_alg: " + str(outer_alg))
 
@@ -192,15 +225,21 @@ def compute_ordering_index(ordering):
     return ordering_index
 
 
-def create_clusters(coverage, dp_unit_prob, clustering_method, distance_function, linkage, cluster_num):
+def create_clusters(coverage, unit_dp, unit_fp, clustering_method, distance_function, linkage, cluster_num,
+                    use_fp):
+    test_num = coverage.shape[0]
     unit_num = coverage.shape[1]
 
-    clustering = clustering_method(coverage, dp_unit_prob, distance_function, linkage, cluster_num)
-    total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
+    total_fp_coverage = np.matmul(coverage, unit_fp)
+#    max_dp = np.max(np.multiply(coverage>=0.1, unit_dp), axis=1)
+#    max_dp = np.max(np.multiply(coverage, unit_dp), axis=1)
+    max_dp = np.max(np.multiply(coverage>=0.05, unit_dp), axis=1)
+    assert(len(max_dp) == test_num)
+    clustering = clustering_method(coverage, unit_dp, unit_fp, distance_function, linkage, cluster_num, use_fp)
 
     # constructing the clusters
     clusters = [[] for c in range(0, cluster_num)]
     for (index, val) in enumerate(clustering.labels_):
-        clusters[val].append((index, total_weighted_coverage[index]))
+        clusters[val].append((index, total_fp_coverage[index], max_dp[index]))
 
     return clusters, clustering
