@@ -15,10 +15,10 @@ def clustering_agg(coverage, dp_unit_prob, distance_function, linkage_crit, clus
 #    connectivity[connectivity > conn_eps] = 1
 #    connectivity[connectivity <= conn_eps] = 0
 
-    fp_big_threshold = 0.2
+    fp_big_threshold = 0.001
     total_weighted_coverage = np.matmul(coverage, dp_unit_prob)
     total_sorted_arg = np.argsort(total_weighted_coverage)
-    cluster_subset_maxsize = math.floor(cluster_num)
+    cluster_subset_maxsize = math.floor(cluster_num/2)
     total_sorted_arg_des = total_sorted_arg[::-1]
 
     print("coverage shape: ", np.shape(coverage))
@@ -26,6 +26,10 @@ def clustering_agg(coverage, dp_unit_prob, distance_function, linkage_crit, clus
     print("total_weighted_coverage shape: ", np.shape(total_weighted_coverage))
     print("number of total_weighted_coverage >= ", fp_big_threshold, ": ", np.sum(total_weighted_coverage >= fp_big_threshold))
     print("cluster_subset_maxsize: ", cluster_subset_maxsize)
+    print("total_weighted_coverage[total_sorted_des[", 0, "]]: ",
+          total_weighted_coverage[total_sorted_arg_des[0]])
+    print("total_weighted_coverage[total_sorted_des[", math.floor(cluster_subset_maxsize/2)-1, "]]: ",
+          total_weighted_coverage[total_sorted_arg_des[math.floor(cluster_subset_maxsize/2)-1]])
     print("total_weighted_coverage[total_sorted_des[", cluster_subset_maxsize-1, "]]: ",
           total_weighted_coverage[total_sorted_arg_des[cluster_subset_maxsize-1]])
 

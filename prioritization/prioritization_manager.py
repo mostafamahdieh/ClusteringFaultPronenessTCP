@@ -272,7 +272,7 @@ def run_gclef_prioritization(bug_prediction_data, score_label, project, version_
     f.close()
 
 
-def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, version_number, clustering_method, distance_function, linkage, inner_prioritization, 
+def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, version_number, clustering_method, distance_function, linkage, inner_prioritizations, 
         cluster_nums, c_dp_values, filename, alg_prefix):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
@@ -309,13 +309,14 @@ def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, 
             else:
                 clusters, clustering = pr_cl.create_clusters(coverage, dp_unit_prob, clustering_method, distance_function, linkage, cluster_num)
 
-            print("Running tcp_clustering_inner_outer_fp for c_dp: ", c_dp)
-            ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_prioritization, 'total')
-            first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)
-            apfd = pc.rank_evaluation_apfd(ranks, failed_tests_ids)
-            print("first_fail: ", first_fail, " apfd: ", apfd)
-            result_line = "%s_clus%d,%f,%f" % (alg_prefix[ind], cluster_num, first_fail, apfd)
-            f.write(result_line + "\n")
+            for inner_prioritization in inner_prioritizations:
+                print("Running tcp_clustering_inner_outer_fp for c_dp: ", c_dp, " inner alg: ", inner_prioritization)
+                ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_prioritization, 'total')
+                first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)
+                apfd = pc.rank_evaluation_apfd(ranks, failed_tests_ids)
+                print("first_fail: ", first_fail, " apfd: ", apfd)
+                result_line = "%s_%s_clus%d,%f,%f" % (alg_prefix[ind], alg_to_char(inner_prioritization), cluster_num, first_fail, apfd)
+                f.write(result_line + "\n")
 
     print()
     f.close()

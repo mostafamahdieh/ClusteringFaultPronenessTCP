@@ -10,8 +10,8 @@ from sklearn.metrics.pairwise import cosine_distances
 
 projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
 from_version = [1, 1, 1, 1, 1]
-#to_version = [26, 133, 65, 106, 27]
 to_version = [26, 133, 65, 106, 26]
+#to_version = [26, 133, 65, 106, 27]
 
 
 for index, project in enumerate(projects):
