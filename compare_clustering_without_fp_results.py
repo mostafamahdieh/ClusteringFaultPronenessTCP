@@ -12,7 +12,7 @@ from results.compare_clustering_results import compare_clustering_results
 projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
 #to_version = [26, 133, 65, 106, 27]
 #to_version = [13, 50, 33, 50, 14]
-to_version = [21, 128, 60, 101, 22]
+to_version = [26, 133, 65, 106, 27]
 
 data_path = 'aggregate/main_results'
 output_path = 'aggregate/compare_clustering_without_fp'

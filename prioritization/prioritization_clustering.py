@@ -53,6 +53,13 @@ def clustering_agg(coverage, unit_dp, unit_fp, distance_function, linkage_crit, 
     return clustering
 
 
+def clustering_agg1(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
+    print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
+    clustering, model = run_clustering(cluster_num, coverage, distance_function, linkage_crit)
+    print("Clustering finished.")
+    return clustering, model
+
+
 def clustering_agg2(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
     print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
 
@@ -61,12 +68,23 @@ def clustering_agg2(coverage, unit_dp, unit_fp, distance_function, linkage_crit,
 
     distance = distance_function(coverage, coverage)
 
-    print("coverage shape: ", np.shape(coverage))
+    clustering, model = run_clustering(cluster_num, coverage, distance_function, linkage_crit)
 
-    clustering = AgglomerativeClustering(n_clusters=cluster_num, linkage=linkage_crit,
-                                         affinity='precomputed').fit(distance)
     print("Clustering finished.")
-    return clustering
+    return clustering, model
+
+
+def run_clustering(cluster_num, coverage, distance_function, linkage_crit):
+    if type(distance_function) is str:
+        model = AgglomerativeClustering(n_clusters=cluster_num, affinity=distance_function,
+                                        linkage=linkage_crit)
+        clustering = model.fit(coverage)
+    else:
+        distance = distance_function(coverage, coverage)
+        model = AgglomerativeClustering(n_clusters=cluster_num, linkage=linkage_crit,
+                                        affinity='precomputed')
+        clustering = model.fit(distance)
+    return clustering, model
 
 
 def clustering_agg3(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
@@ -76,26 +94,18 @@ def clustering_agg3(coverage, unit_dp, unit_fp, distance_function, linkage_crit,
         unit_num = coverage.shape[1]
         coverage = np.multiply(coverage, 0.01 * np.ones((unit_num,)) + 0.99 * unit_dp)
 
-    print("coverage shape: ", np.shape(coverage))
+    clustering, model = run_clustering(cluster_num, coverage, distance_function, linkage_crit)
 
-    if type(distance_function) is str:
-        clustering = AgglomerativeClustering(n_clusters=cluster_num, affinity=distance_function,
-                                             linkage=linkage_crit).fit(coverage)
-    else:
-        distance = distance_function(coverage, coverage)
-        clustering = AgglomerativeClustering(n_clusters=cluster_num, linkage=linkage_crit,
-                                             affinity='precomputed').fit(distance)
     print("Clustering finished.")
-    return clustering
-
+    return clustering, model
 
 
 def clustering_agg_nonprecomputed(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
-    print("Running agglomerative clustering (distance = %s, linkage = %s, cluster_num = %d)..." % (distance_function, linkage_crit, cluster_num))
+    print("Running agglomerative clustering (distance = %s, linkage = %s, cluster_num = %d)..." % (
+    distance_function, linkage_crit, cluster_num))
 
-    print("coverage shape: ", np.shape(coverage))
-
-    clustering = AgglomerativeClustering(n_clusters=cluster_num, affinity=distance_function, linkage=linkage_crit).fit(coverage)
+    clustering = AgglomerativeClustering(n_clusters=cluster_num, affinity=distance_function, linkage=linkage_crit).fit(
+        coverage)
     print("Clustering finished.")
     return clustering
 
@@ -172,6 +182,7 @@ def copy_clusters(clusters):
 
     return new_clusters
 
+
 # inner_alg: 1 for total, 2 for additional
 # outer_alg: 0 for nothing, 1 for total, 2 for additional
 def tcp_clustering_inner_outer(clusters, coverage, unit_fp, inner_alg, outer_alg):
@@ -239,15 +250,15 @@ def create_clusters(coverage, unit_dp, unit_fp, clustering_method, distance_func
     unit_num = coverage.shape[1]
 
     total_fp_coverage = np.matmul(coverage, unit_fp)
-#    max_dp = np.max(np.multiply(coverage>=0.1, unit_dp), axis=1)
-#    max_dp = np.max(np.multiply(coverage, unit_dp), axis=1)
-    max_dp = np.max(np.multiply(coverage>=0.05, unit_dp), axis=1)
-    assert(len(max_dp) == test_num)
-    clustering = clustering_method(coverage, unit_dp, unit_fp, distance_function, linkage, cluster_num, use_fp)
+    #    max_dp = np.max(np.multiply(coverage>=0.1, unit_dp), axis=1)
+    #    max_dp = np.max(np.multiply(coverage, unit_dp), axis=1)
+    max_dp = np.max(np.multiply(coverage >= 0.05, unit_dp), axis=1)
+    assert (len(max_dp) == test_num)
+    clustering, model = clustering_method(coverage, unit_dp, unit_fp, distance_function, linkage, cluster_num, use_fp)
 
     # constructing the clusters
     clusters = [[] for c in range(0, cluster_num)]
     for (index, val) in enumerate(clustering.labels_):
         clusters[val].append((index, total_fp_coverage[index], max_dp[index]))
 
-    return clusters, clustering
+    return clusters, clustering, model

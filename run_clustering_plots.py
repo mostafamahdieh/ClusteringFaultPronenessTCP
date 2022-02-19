@@ -1,17 +1,18 @@
 import pandas as pd
-from prioritization.prioritization_manager import run_prioritization_clustering_fp
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import nan_euclidean_distances
 from sklearn.neighbors import DistanceMetric
 from sklearn.preprocessing import Normalizer
-from prioritization.prioritization_clustering import clustering_agg
+from prioritization.prioritization_clustering import clustering_agg1, clustering_agg2
 from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.metrics.pairwise import cosine_distances
 
-cluster_nums = list(range(50,1001,50))
+from results.clustering_plots import plot_clustering_num
+
+cluster_nums = [2]+list(range(5,1001,5))
 projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
 from_version = [1, 1, 1, 1, 1]
-to_version = [26, 133, 65, 106, 26]
+to_version = [1, 1, 1, 1, 1]
 
 
 for index, project in enumerate(projects):
@@ -22,4 +23,5 @@ for index, project in enumerate(projects):
     for version_number in range(from_version[index], to_version[index] + 1):
         print("* Version %d" % version_number)
 
-
+        plot_clustering_num(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg2, euclidean_distances, 'average', cluster_nums, [0, 0.999],
+                ['eucl_agg2_no_fp', 'eucl_agg2_no_fp'])

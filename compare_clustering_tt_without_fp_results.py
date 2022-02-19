@@ -10,13 +10,13 @@ import itertools as it
 from results.compare_clustering_results import compare_clustering_results
 
 projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
-to_version = [21, 128, 60, 101, 22]
-#to_version = [13, 50, 33, 50, 14]
+#to_version = [21, 128, 60, 101, 22]
+to_version = [26, 133, 65, 106, 27]
 
 data_path = './aggregate/main_results'
 output_path = './aggregate/compare_clustering_tt_without_fp'
 
-cluster_nums = list(range(50,501,50))
+cluster_nums = list(range(50,1001,50))
 dist_functions = ['eucl']
 dist_complete_names = ['Euclidean', 'Manhattan', 'Cosine']
 base_algorithmname = '_xgb_results_14001115_online_c0_tt_clus'
