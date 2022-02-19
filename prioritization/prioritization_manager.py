@@ -308,6 +308,7 @@ def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, 
 
     for ind, c_dp in enumerate(c_dp_values):
         unit_fp = generate_weighted_unit_fp(c_dp, unit_dp, unit_num)
+        print("c_dp: ", c_dp)
         for cluster_num in cluster_nums:
             clusters, clustering = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
                                                          distance_function, linkage, cluster_num, c_dp != 0)

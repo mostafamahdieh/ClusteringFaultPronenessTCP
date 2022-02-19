@@ -73,14 +73,22 @@ def clustering_agg3(coverage, unit_dp, unit_fp, distance_function, linkage_crit,
     print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
 
     if use_fp:
-        coverage = np.multiply(coverage, unit_fp)
+        unit_num = coverage.shape[1]
+        coverage = np.multiply(coverage, 0.01 * np.ones((unit_num,)) + 0.99 * unit_dp)
 
     print("coverage shape: ", np.shape(coverage))
 
-    clustering = AgglomerativeClustering(n_clusters=cluster_num, affinity=distance_function, linkage=linkage_crit).fit(coverage)
-
+    if type(distance_function) is str:
+        clustering = AgglomerativeClustering(n_clusters=cluster_num, affinity=distance_function,
+                                             linkage=linkage_crit).fit(coverage)
+    else:
+        distance = distance_function(coverage, coverage)
+        clustering = AgglomerativeClustering(n_clusters=cluster_num, linkage=linkage_crit,
+                                             affinity='precomputed').fit(distance)
     print("Clustering finished.")
     return clustering
+
+
 
 def clustering_agg_nonprecomputed(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
     print("Running agglomerative clustering (distance = %s, linkage = %s, cluster_num = %d)..." % (distance_function, linkage_crit, cluster_num))
