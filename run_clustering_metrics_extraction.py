@@ -7,9 +7,9 @@ from prioritization.prioritization_clustering import clustering_agg1, clustering
 from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.metrics.pairwise import cosine_distances
 
-from results.clustering_plots import plot_clustering_num
+from results.clustering_plots import compute_clustering_metrics
 
-cluster_nums = [2]+list(range(5,1001,5))
+cluster_nums = [2]+list(range(5,501,5))
 projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
 from_version = [1, 1, 1, 1, 1]
 to_version = [1, 1, 1, 1, 1]
@@ -23,5 +23,7 @@ for index, project in enumerate(projects):
     for version_number in range(from_version[index], to_version[index] + 1):
         print("* Version %d" % version_number)
 
-        plot_clustering_num(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg2, euclidean_distances, 'average', cluster_nums, [0, 0.999],
-                ['eucl_agg2_no_fp', 'eucl_agg2_no_fp'])
+        metrics = compute_clustering_metrics(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg2, euclidean_distances, 'average', cluster_nums, [0, 0.999])
+
+        proj_stats = pd.DataFrame(columns=['cluster_num', 'silhouette', 'calinski', 'davies','silhouette_fp', 'calinski_fp', 'davies_fp'], data=metrics)
+        proj_stats.to_csv('clustering_metrics/%s_%d.csv' % (project, version_number))

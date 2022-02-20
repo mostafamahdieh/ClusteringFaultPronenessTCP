@@ -15,10 +15,11 @@ projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
 to_version = [26, 133, 65, 106, 27]
 
 data_path = 'aggregate/main_results'
-output_path = 'aggregate/compare_clustering_without_fp'
+output_path = 'aggregate/compare_clustering_at_without_fp'
 
-cluster_nums = list(range(50,501,50))
-dist_functions = ['eucl', 'manh', 'cosd']
+cluster_nums = [1]+list(range(50,501,50))
+#dist_functions = ['eucl', 'manh', 'cosd']
+dist_functions = ['eucl']
 dist_complete_names = ['Euclidean', 'Manhattan', 'Cosine']
 
 base_algorithm_name = '_fp0_clus'
