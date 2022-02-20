@@ -277,6 +277,15 @@ def run_gclef_prioritization(bug_prediction_data, score_label, project, version_
     f.close()
 
 
+def cluster_sizes(clusters):
+    cluster_sizes = []
+    for cluster in clusters:
+        cluster_sizes.append(len(cluster))
+
+    cluster_sizes.sort(reverse=True)
+    return cluster_sizes
+
+
 def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, version_number, clustering_method,
                                      distance_function, linkage, inner_prioritizations,
                                      cluster_nums, c_dp_values, filename, alg_prefix):
@@ -310,15 +319,11 @@ def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, 
         unit_fp = generate_weighted_unit_fp(c_dp, unit_dp, unit_num)
         print("c_dp: ", c_dp)
         for cluster_num in cluster_nums:
-            clusters, clustering = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
+            clusters, clustering, model = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
                                                          distance_function, linkage, cluster_num, c_dp != 0)
 
-            cluster_sizes = []
-            for cluster in clusters:
-                cluster_sizes.append(len(cluster))
+            print("cluster_sizes: ", cluster_sizes(clusters))
 
-            cluster_sizes.sort(reverse=True)
-            print("cluster_sizes: ", cluster_sizes)
 
             for inner_prioritization in inner_prioritizations:
                 print("Running tcp_clustering_inner_outer_fp for c_dp: ", c_dp, " inner alg: ", inner_prioritization)
@@ -356,8 +361,10 @@ def run_prioritization_clustering(project, version_number, clustering_method, di
 
     unit_fp = np.ones(unit_num)
     for cluster_num in cluster_nums:
-        clusters, clustering = pr_cl.create_clusters(coverage, unit_fp, unit_fp, clustering_method,
+        clusters, clustering, model = pr_cl.create_clusters(coverage, unit_fp, unit_fp, clustering_method,
                                                      distance_function, linkage, cluster_num, False)
+        
+        print("cluster_sizes: ", cluster_sizes(clusters))
 
         ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, 'additional', 'total')
         first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)

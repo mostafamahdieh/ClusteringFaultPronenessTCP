@@ -41,12 +41,12 @@ def compute_clustering_metrics(bug_prediction_data, score_label, project, versio
             clusters, clustering, model = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
                                                          distance_function, linkage, cluster_num, c_dp != 0)
             labels = clustering.labels_
-            yhat_2 = model.fit_predict(coverage)
+            #yhat_2 = model.fit_predict(coverage)
             # retrieve unique clusters
 
             score_AGclustering_s = silhouette_score(coverage, labels, metric='euclidean')
             score_AGclustering_c = calinski_harabasz_score(coverage, labels)
-            score_AGclustering_d = davies_bouldin_score(coverage, yhat_2)
+            score_AGclustering_d = 0 # davies_bouldin_score(coverage, yhat_2)
 
             print('Silhouette, Calinski Harabasz, Davies Bouldin Score: %.4f %.4f %.4f' % (score_AGclustering_s, score_AGclustering_c, score_AGclustering_d))
             metrics = metrics + [score_AGclustering_s, score_AGclustering_c, score_AGclustering_c]
