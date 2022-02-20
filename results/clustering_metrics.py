@@ -49,7 +49,7 @@ def compute_clustering_metrics(bug_prediction_data, score_label, project, versio
             score_AGclustering_d = davies_bouldin_score(coverage, yhat_2)
 
             print('Silhouette, Calinski Harabasz, Davies Bouldin Score: %.4f %.4f %.4f' % (score_AGclustering_s, score_AGclustering_c, score_AGclustering_d))
-            metrics = metrics + [score_AGclustering_s, score_AGclustering_c, score_AGclustering_c]
+            metrics = metrics + [score_AGclustering_s, score_AGclustering_c, score_AGclustering_d]
         metrics_all.append(metrics)
 
     return metrics_all
