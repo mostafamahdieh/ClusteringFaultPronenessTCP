@@ -7,7 +7,7 @@ from prioritization.prioritization_clustering import clustering_agg1, clustering
 from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.metrics.pairwise import cosine_distances
 
-from results.clustering_plots import compute_clustering_metrics
+from results.clustering_metrics import compute_clustering_metrics
 
 cluster_nums = [2]+list(range(5,501,5))
 projects = ['Closure', 'Lang', 'Math', 'Time']
