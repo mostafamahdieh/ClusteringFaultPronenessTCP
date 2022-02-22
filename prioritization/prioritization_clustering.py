@@ -66,8 +66,6 @@ def clustering_agg2(coverage, unit_dp, unit_fp, distance_function, linkage_crit,
     if use_fp:
         coverage = np.multiply(coverage, unit_fp)
 
-    distance = distance_function(coverage, coverage)
-
     clustering, model = run_clustering(cluster_num, coverage, distance_function, linkage_crit)
 
     print("Clustering finished.")
@@ -80,7 +78,13 @@ def run_clustering(cluster_num, coverage, distance_function, linkage_crit):
                                         linkage=linkage_crit)
         clustering = model.fit(coverage)
     else:
-        distance = distance_function(coverage, coverage)
+        if isinstance(distance_function, (np.ndarray, np.generic)):
+            distance = distance_function
+            print("Distance was precomputed.")
+        else:
+            distance = distance_function(coverage, coverage)
+            print("Distance computed.")
+
         model = AgglomerativeClustering(n_clusters=cluster_num, linkage=linkage_crit,
                                         affinity='precomputed')
         clustering = model.fit(distance)

@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_distances
 from results.clustering_metrics import compute_clustering_metrics
 
 cluster_nums = [2]+list(range(5,501,5))
-projects = ['Closure', 'Lang', 'Math', 'Time']
+projects = ['Chart', 'Lang', 'Math', 'Time', 'Closure']
 from_version = [1, 1, 1, 1, 1]
 to_version = [1, 1, 1, 1, 1]
 

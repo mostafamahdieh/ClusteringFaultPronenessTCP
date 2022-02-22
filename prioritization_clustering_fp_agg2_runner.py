@@ -23,7 +23,7 @@ for index, project in enumerate(projects):
     print("done.")
     for version_number in range(from_version[index], to_version[index] + 1):
         print("* Version %d" % version_number)
-        run_prioritization_clustering_fp(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg2, euclidean_distances, 'average', ['total', 'max'], list(range(50,501,50)),
-                                         [0.999], 'eucl_agg2_xgb14001115_online_c0999_50_500.csv',
+        run_prioritization_clustering_fp(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg2, euclidean_distances, 'average', ['total', 'max'], [225, 275, 325, 375, 425, 475],
+                                         [0.999], 'eucl_agg2_xgb14001115_online_c0999_225_475.csv',
                                          ['eucl_agg2_xgb14001115_online_c0999'])
         print()
