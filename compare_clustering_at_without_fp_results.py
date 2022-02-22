@@ -18,10 +18,10 @@ data_path = 'aggregate/main_results'
 output_path = 'aggregate/compare_clustering_at_without_fp'
 
 cluster_nums = [1]+list(range(50,501,50))
-#dist_functions = ['eucl', 'manh', 'cosd']
-dist_functions = ['eucl']
+dist_functions = ['eucl', 'manh', 'cosd']
 dist_complete_names = ['Euclidean', 'Manhattan', 'Cosine']
 
 base_algorithm_name = '_fp0_clus'
 
-compare_clustering_results(projects, to_version, data_path, output_path, cluster_nums, dist_functions, dist_complete_names, base_algorithm_name, "_at")
+compare_clustering_results(projects, to_version, data_path, output_path, cluster_nums, dist_functions,
+                           dist_complete_names, base_algorithm_name, "_at", 'clus_at_nofp')
