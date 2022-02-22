@@ -21,4 +21,5 @@ dist_functions = ['eucl', 'cosd']
 dist_complete_names = ['Euclidean', 'Cosine']
 base_algorithmname = '_agg2_xgb14001115_online_c0999_max_clus'
 
-compare_clustering_results(projects, to_version, data_path, output_path, cluster_nums, dist_functions, dist_complete_names, base_algorithmname, "")
+compare_clustering_results(projects, to_version, data_path, output_path, cluster_nums, dist_functions,
+                           dist_complete_names, base_algorithmname, "", 'clus_agg2_max')

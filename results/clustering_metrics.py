@@ -1,11 +1,13 @@
 import numpy as np
-import pandas
+import pandas as pd
+from matplotlib import pyplot as plt
 from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 
 from prioritization import prioritization_std as ps, prioritization_core as pc, prioritization_clustering as pr_cl, \
     prioritization_gclef as pr_gclef
 from prioritization.prioritization_manager import extract_classes_in_data, extract_bug_prediction_for_classes, \
     extract_bug_prediction_for_units_version, generate_weighted_unit_fp
+from results.compare_clustering_results import get_project_tcp_results
 
 
 def compute_clustering_metrics(bug_prediction_data, score_label, project, version_number, clustering_method,
@@ -41,15 +43,61 @@ def compute_clustering_metrics(bug_prediction_data, score_label, project, versio
             clusters, clustering, model = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
                                                          distance_function, linkage, cluster_num, c_dp != 0)
             labels = clustering.labels_
-            yhat_2 = model.fit_predict(coverage)
             # retrieve unique clusters
 
             score_AGclustering_s = silhouette_score(coverage, labels, metric='euclidean')
             score_AGclustering_c = calinski_harabasz_score(coverage, labels)
-            score_AGclustering_d = davies_bouldin_score(coverage, yhat_2)
+            score_AGclustering_d = davies_bouldin_score(coverage, labels)
 
             print('Silhouette, Calinski Harabasz, Davies Bouldin Score: %.4f %.4f %.4f' % (score_AGclustering_s, score_AGclustering_c, score_AGclustering_d))
             metrics = metrics + [score_AGclustering_s, score_AGclustering_c, score_AGclustering_d]
         metrics_all.append(metrics)
 
     return metrics_all
+
+def plot_clustering_metrics(data_path, project, version_number, base_alg_name, after_name, metrics, matric_labels, cluster_nums_filter, tcp_results_cluster_nums, dist_functions, dist_complete_names, tcp_to_version, is_fp, output_name):
+    first_fail = pd.read_csv(data_path + "/first_fail_all.csv")
+    apfd = pd.read_csv(data_path + "/apfd_all.csv")
+    vals = first_fail
+    proj_metrics = pd.read_csv('clustering_metrics/1/%s_%d.csv' % (project, version_number))
+
+#    print(proj_metrics.shape)
+#    print(len(cluster_nums))
+
+    proj_metrics = proj_metrics[proj_metrics["cluster_num"].isin(cluster_nums_filter)]
+    cluster_nums = proj_metrics["cluster_num"]
+
+    for index, metric in enumerate(metrics):
+        fig1 = plt.figure()
+        plt.plot(cluster_nums, proj_metrics[metric], '--', label=metric)
+        plt.plot(cluster_nums, proj_metrics[metric + '_fp'], '--', label=metric + '_fp')
+        plt.xticks([2] + list(range(50, 501, 50)))
+        plt.legend()
+
+        fig1.savefig('clustering_metrics/plots/%s_%s.png' % (project, metric))
+
+        fig2, axs = plt.subplots(2, 1, sharex=True)
+        # Remove horizontal space between axes
+        fig2.subplots_adjust(hspace=0)
+
+        if is_fp:
+            axs[0].plot(cluster_nums, proj_metrics[metric + '_fp'], '-.', label=matric_labels[index])
+        else:
+            axs[0].plot(cluster_nums, proj_metrics[metric], '--', label=matric_labels[index])
+        axs[0].set_xticks([2] + list(range(50, 501, 50)))
+        axs[0].legend()
+        # plt.legend(title='Distance function')
+        # plt.ylabel('APFD (%)')
+        axs[1].set_ylabel('First fail (%)')
+        axs[1].grid(axis='x', color='0.95')
+        plt.suptitle(project)
+
+        proj_stats, proj_stats_data = get_project_tcp_results(base_alg_name, after_name, tcp_results_cluster_nums, dist_functions, project,
+                                tcp_to_version, vals)
+
+        for (ind_dist, dist) in enumerate(dist_functions):
+            axs[1].plot(proj_stats["Cluster #"], proj_stats[dist], 'o--', label=dist_complete_names[ind_dist])
+
+        fig2.savefig('clustering_metrics/plots/clus_hop5/%s_%s_%s.png' % (output_name, project, metric))
+
+        plt.close('all')
