@@ -32,6 +32,13 @@ def compute_clustering_metrics(bug_prediction_data, score_label, project, versio
     unit_dp = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, class_of_units, class_dp_prob)
 
     metrics_all = []
+
+    if not type(distance_function) is str:
+        distance1 = distance_function(coverage, coverage)
+        print('distance computed.')
+    else:
+        distance1 = distance_function
+
     for cluster_num in cluster_nums:
         print("cluster_num: ", cluster_num)
 
@@ -41,7 +48,7 @@ def compute_clustering_metrics(bug_prediction_data, score_label, project, versio
             unit_fp = generate_weighted_unit_fp(c_dp, unit_dp, unit_num)
 
             clusters, clustering, model = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
-                                                         distance_function, linkage, cluster_num, c_dp != 0)
+                                                         distance1, linkage, cluster_num, c_dp != 0)
             labels = clustering.labels_
             # retrieve unique clusters
 
