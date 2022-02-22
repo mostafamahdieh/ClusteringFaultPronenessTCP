@@ -54,6 +54,7 @@ def compute_clustering_metrics(bug_prediction_data, score_label, project, versio
         metrics_all.append(metrics)
 
     return metrics_all
+<<<<<<< HEAD
 
 def plot_clustering_metrics(data_path, project, version_number, base_alg_name, after_name, metrics, matric_labels, cluster_nums_filter, tcp_results_cluster_nums, dist_functions, dist_complete_names, tcp_to_version, is_fp, output_name):
     first_fail = pd.read_csv(data_path + "/first_fail_all.csv")
@@ -101,3 +102,5 @@ def plot_clustering_metrics(data_path, project, version_number, base_alg_name, a
         fig2.savefig('clustering_metrics/plots/clus_hop5/%s_%s_%s.png' % (output_name, project, metric))
 
         plt.close('all')
+=======
+>>>>>>> 42b3d13ee27f27ec278603ccde8c27efbaab3a48

@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_distances
 from results.clustering_metrics import compute_clustering_metrics
 
 cluster_nums = [2]+list(range(5,501,5))
-projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
+projects = ['Closure', 'Lang', 'Math', 'Time']
 from_version = [1, 1, 1, 1, 1]
 to_version = [1, 1, 1, 1, 1]
 
@@ -26,4 +26,4 @@ for index, project in enumerate(projects):
         metrics = compute_clustering_metrics(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg2, euclidean_distances, 'average', cluster_nums, [0, 0.999])
 
         proj_stats = pd.DataFrame(columns=['cluster_num', 'silhouette', 'calinski', 'davies','silhouette_fp', 'calinski_fp', 'davies_fp'], data=metrics)
-        proj_stats.to_csv('clustering_metrics/clus_hop5/%s_%d.csv' % (project, version_number))
+        proj_stats.to_csv('clustering_metrics/%s_%d.csv' % (project, version_number))
