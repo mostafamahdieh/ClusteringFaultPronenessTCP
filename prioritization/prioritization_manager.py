@@ -319,15 +319,21 @@ def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, 
         unit_fp = generate_weighted_unit_fp(c_dp, unit_dp, unit_num)
         print("c_dp: ", c_dp)
 
+        if c_dp != 0:
+            print('adjusting coverage...')
+            coverage1 = np.multiply(coverage, unit_fp)
+        else:
+            coverage1 = coverage
+
         if not type(distance_function) is str:
-            distance = distance_function(coverage, coverage)
+            distance = distance_function(coverage1, coverage1)
             print('distance computed.')
         else:
             distance = distance_function
 
         for cluster_num in cluster_nums:
 
-            clusters, clustering, model = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
+            clusters, clustering, labels = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
                                                          distance, linkage, cluster_num, c_dp != 0)
 
             print("cluster_sizes: ", cluster_sizes(clusters))
@@ -353,7 +359,7 @@ def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, 
 
 
 def run_prioritization_clustering(project, version_number, clustering_method, distance_function, linkage, cluster_nums,
-                                  filename, alg_prefix):
+                                  filename, alg_prefix, alg_postfix):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
@@ -367,10 +373,16 @@ def run_prioritization_clustering(project, version_number, clustering_method, di
     f = open('%s/%s' % (data_path, filename), "w+")
     f.write("alg,first_fail,apfd\n")
 
+    if not type(distance_function) is str:
+        distance1 = distance_function(coverage, coverage)
+        print('distance computed.')
+    else:
+        distance1 = distance_function
+
     unit_fp = np.ones(unit_num)
     for cluster_num in cluster_nums:
-        clusters, clustering, model = pr_cl.create_clusters(coverage, unit_fp, unit_fp, clustering_method,
-                                                     distance_function, linkage, cluster_num, False)
+        clusters, clustering, labels = pr_cl.create_clusters(coverage, unit_fp, unit_fp, clustering_method,
+                                                     distance1, linkage, cluster_num, False)
         
         print("cluster_sizes: ", cluster_sizes(clusters))
 
@@ -379,7 +391,7 @@ def run_prioritization_clustering(project, version_number, clustering_method, di
         apfd = pc.rank_evaluation_apfd(ranks, failed_tests_ids)
         print("first_fail: ", first_fail, " apfd: ", apfd)
 
-        result_line = "%s_clus%d,%f,%f" % (alg_prefix, cluster_num, first_fail, apfd)
+        result_line = "%s_clus%d%s,%f,%f" % (alg_prefix, cluster_num, alg_postfix, first_fail, apfd)
 
         f.write(result_line + "\n")
 

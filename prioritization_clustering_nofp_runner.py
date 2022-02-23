@@ -18,8 +18,10 @@ for index, project in enumerate(projects):
     print("Project " + project)
     for version_number in range(from_version[index], to_version[index] + 1):
         print("* Version %d" % version_number)
-        run_prioritization_clustering(project, version_number, clustering_agg1, 'euclidean', 'ward', list(range(25,201,25))
-                                         , 'eucl_ward_at_nofp_20.csv',   ['eucl_ward_at_nofp_'])
+#        run_prioritization_clustering(project, version_number, clustering_agg1, euclidean_distances, 'average', [1,2]+list(range(25,501,25))
+#                                         , 'eucl_fp0_clus_at_25_475.csv',   'eucl_fp0_', '_at')
+        run_prioritization_clustering(project, version_number, clustering_agg1, euclidean_distances, 'average', [25],
+                            'eucl_fp0_clus_at_25.csv',   'eucl_fp0_', '_at')
 #        run_prioritization_clustering(project, version_number, clustering_agg, cosine_distances, 'average', list(range(50,501,50),
 #                                         , 'eucl_at_nofp_50_500.csv',   ['eucl_at_nofp_'])
 #        run_prioritization_clustering(project, version_number, clustering_agg, manhattan_distances, 'average', list(range(50,501,50),

@@ -66,17 +66,17 @@ def clustering_agg2(coverage, unit_dp, unit_fp, distance_function, linkage_crit,
     if use_fp:
         coverage = np.multiply(coverage, unit_fp)
 
-    clustering, model = run_clustering(cluster_num, coverage, distance_function, linkage_crit)
+    clustering, labels = run_clustering(cluster_num, coverage, distance_function, linkage_crit)
 
     print("Clustering finished.")
-    return clustering, model
+    return clustering, labels
 
 
 def run_clustering(cluster_num, coverage, distance_function, linkage_crit):
     if type(distance_function) is str:
         model = AgglomerativeClustering(n_clusters=cluster_num, affinity=distance_function,
                                         linkage=linkage_crit)
-        clustering = model.fit(coverage)
+        labels = model.fit_predict(coverage)
     else:
         if isinstance(distance_function, (np.ndarray, np.generic)):
             distance = distance_function
@@ -87,8 +87,8 @@ def run_clustering(cluster_num, coverage, distance_function, linkage_crit):
 
         model = AgglomerativeClustering(n_clusters=cluster_num, linkage=linkage_crit,
                                         affinity='precomputed')
-        clustering = model.fit(distance)
-    return clustering, model
+        labels = model.fit_predict(distance)
+    return model, labels
 
 
 def clustering_agg3(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
@@ -258,11 +258,11 @@ def create_clusters(coverage, unit_dp, unit_fp, clustering_method, distance_func
     #    max_dp = np.max(np.multiply(coverage, unit_dp), axis=1)
     max_dp = np.max(np.multiply(coverage >= 0.05, unit_dp), axis=1)
     assert (len(max_dp) == test_num)
-    clustering, model = clustering_method(coverage, unit_dp, unit_fp, distance_function, linkage, cluster_num, use_fp)
+    clustering, labels = clustering_method(coverage, unit_dp, unit_fp, distance_function, linkage, cluster_num, use_fp)
 
     # constructing the clusters
     clusters = [[] for c in range(0, cluster_num)]
     for (index, val) in enumerate(clustering.labels_):
         clusters[val].append((index, total_fp_coverage[index], max_dp[index]))
 
-    return clusters, clustering, model
+    return clusters, clustering, labels 
