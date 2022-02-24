@@ -72,7 +72,7 @@ def run_standard2_prioritization(project, version_number, filename, alg_prefix):
     f.close()
 
 
-def run_art_prioritization(project, version_number, filename):
+def run_art_prioritization(project, version_number, filename, cand_set_function):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
@@ -95,7 +95,7 @@ def run_art_prioritization(project, version_number, filename):
     f = open('%s/%s' % (data_path, filename), "w+")
     f.write("alg,first_fail,apfd\n")
 
-    art_ordering = art_tcp(coverage)
+    art_ordering = art_tcp(coverage, cand_set_function)
     art_apfd = pc.rank_evaluation_apfd(art_ordering, failed_tests_ids)
     print("art_apfd: ", art_apfd)
 

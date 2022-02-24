@@ -37,7 +37,11 @@ def art_create_candidate_set(coverage, remaining_tests):
     return candidate_set
 
 
-def art_tcp(coverage):
+def art_create_candidate_set2(coverage, remaining_tests):
+    return sample(remaining_tests, 100)
+
+
+def art_tcp(coverage, cand_set_function):
     eps = 1.0e-8
 
     test_num = coverage.shape[0]
@@ -51,7 +55,7 @@ def art_tcp(coverage):
     prioritized = list([first_test])
 
     while len(remaining_tests) > 0:
-        candidate_set = art_create_candidate_set(coverage, remaining_tests)
+        candidate_set = cand_set_function(coverage, remaining_tests)
 
         while len(candidate_set) > 0:
             candidate_set_list = list(candidate_set)
