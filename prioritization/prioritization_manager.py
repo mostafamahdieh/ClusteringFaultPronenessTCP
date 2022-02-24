@@ -70,7 +70,6 @@ def run_standard2_prioritization(project, version_number, filename, alg_prefix):
     print()
     f.close()
 
-
 def run_standard2_prioritization_fp(bug_prediction_data, score_label, project, version_number, c_dp_values, filename,
                                     alg_prefix):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
@@ -130,6 +129,51 @@ def run_standard2_prioritization_fp(bug_prediction_data, score_label, project, v
 
         result_line = "tot_%s,%f,%f" % (alg_prefix[ind], total_prioritization_first_fail, total_prioritization_apfd)
         f.write(result_line + "\n")
+
+    print()
+    f.close()
+
+def run_max_prioritization_fp(bug_prediction_data, score_label, project, version_number, c_dp, filename,
+                                    alg_prefix):
+    data_path = "../WTP-data/%s/%d" % (project, version_number)
+
+    coverage, test_names, unit_names = pc.read_coverage_data(data_path)
+    failed_tests_ids = pc.read_failed_tests(data_path, test_names)
+
+    test_num = coverage.shape[0]
+    unit_num = coverage.shape[1]
+    assert (test_num == len(test_names))
+    assert (unit_num == len(unit_names))
+
+    class_of_units, units_in_class, classes = extract_classes_in_data(unit_names, unit_num)
+    class_dp_prob = extract_bug_prediction_for_classes(bug_prediction_data, score_label, version_number, classes)
+
+    class_num = len(classes);
+
+    print("test_num: ", test_num, " unit_num: ", unit_num, " class_num: ", class_num)
+
+    dp_unit_prob = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, class_of_units,
+                                                            class_dp_prob)
+
+    if np.size(failed_tests_ids) == 0:
+        print("No Tests found in coverage values, skipping version")
+        return
+
+    f = open('%s/%s' % (data_path, filename), "w+")
+    f.write("alg,first_fail,apfd\n")
+
+    print("* Running for c_dp: ", c_dp)
+    unit_fp = generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num)
+
+    max_ordering = ps.max_prioritization_std(coverage, unit_fp)
+    max_apfd = pc.rank_evaluation_apfd(max_ordering, failed_tests_ids)
+    print("max_apfd: ", max_apfd)
+
+    max_first_fail = pc.rank_evaluation_first_fail(max_ordering, failed_tests_ids)
+    print("max_first_fail: ", max_first_fail)
+
+    result_line = "max_%s,%f,%f" % (alg_prefix, max_first_fail, max_apfd)
+    f.write(result_line + "\n")
 
     print()
     f.close()
