@@ -1,77 +1,83 @@
 import numpy as np
-from prioritization import prioritization_clustering as pr_cl
+from sklearn.metrics import euclidean_distances
+from random import random, randrange, sample
 
 
-def create_gclef_clusters(coverage, unit_names, units_in_class, sorted_classes_list):
-    unit_num = coverage.shape[1]
-    total_weighted_coverage = np.matmul(coverage, np.ones((unit_num,)))
+def art_create_candidate_set(coverage, remaining_tests):
+    remaining_tests = remaining_tests.copy()
+    eps = 1.0e-8
 
-    class_num = len(sorted_classes_list)
-    unit_class_matrix = np.zeros((unit_num, class_num))
-
-    for (ind, (cl, class_dp_prob)) in enumerate(sorted_classes_list):
-        for u in units_in_class[cl]:
-            unit_class_matrix[u][ind] = 1
-
-    test_class_coverage = np.matmul(coverage, unit_class_matrix)
-    nonzero_coverage = test_class_coverage >= 0.001
-    nonzero_tests, nonzero_classes = np.where(nonzero_coverage)
-    
-    clusters = [[] for c in range(0, class_num)]
-
-    for ind, test in enumerate(nonzero_tests):
-        clusters[nonzero_classes[ind]].append((test, total_weighted_coverage[test]))
-
-    zero_rows = np.flatnonzero(nonzero_coverage.sum(axis=1) == 0)
-    zero_cluster = []
-    for ind, test in enumerate(zero_rows):
-        zero_cluster.append((test, total_weighted_coverage[test]))
-
-    if len(zero_cluster) > 0:
-        clusters.append(zero_cluster)
-
-    print("len(zero_cluster): ", len(zero_cluster))
-
-    return clusters, zero_cluster
-
-
-def tcp_gclef_prioritization(clusters, coverage, inner_alg):
     test_num = coverage.shape[0]
     unit_num = coverage.shape[1]
 
-    # inner cluster prioritization
     selected_tests = set()
-    rearranged_clusters = []
-    for cluster_ind in range(0, len(clusters)):
-        unique_cluster = []
-        for (test_id, tot_weight) in clusters[cluster_ind]:
-            if test_id not in selected_tests:
-                unique_cluster.append((test_id, tot_weight))
-                selected_tests.add(test_id)
-        print("rearrenging cluster #", cluster_ind, " with size ", len(unique_cluster))
-        if inner_alg == 'total':
-            rearranged_cluster = pr_cl.rearrange_tests_total(unique_cluster)
-        elif inner_alg == 'additional':
-            rearranged_cluster = pr_cl.rearrange_tests_additional(unique_cluster, coverage, np.ones((unit_num,)))
+
+    unit_coverage = np.ones((unit_num,))
+    unit = np.ones((unit_num,))
+
+    total_weighted_coverage = np.matmul(coverage, unit)
+    additional_weighted_coverage = np.array(total_weighted_coverage)
+    #    print("additional_weighted_coverage: ", additional_weighted_coverage, "\n")
+    candidate_set = set()
+
+    while len(remaining_tests) > 0:
+        test = sample(remaining_tests, 1)[0]
+        test_coverage = additional_weighted_coverage[test]
+
+        if len(candidate_set) == 0 or test_coverage > eps:
+            new_unit_coverage = np.maximum(unit_coverage - coverage[test, :], 0)
+            coverage_diff = (unit_coverage - new_unit_coverage)
+            additional_weighted_coverage -= np.matmul(coverage, np.multiply(coverage_diff, unit))
+            unit_coverage = new_unit_coverage
+            candidate_set.add(test)
+            remaining_tests.remove(test)
         else:
-            raise Exception("Bad value for inner_alg: " + str(inner_alg))
+            break
 
-        assert len(unique_cluster) == len(rearranged_cluster)
-        rearranged_clusters.append(rearranged_cluster)
-
-    print("len(selected_tests: ", len(selected_tests), " test_num: ", test_num)
-    assert(len(selected_tests) == test_num)
-
-    ranks = np.zeros((test_num,))
-
-    added_tests = 0
-    for cluster in rearranged_clusters:
-        for (test_id, tot_weight) in cluster:
-            ranks[added_tests] = test_id
-            added_tests = added_tests+1
-
-    assert(added_tests == test_num)
-
-    return ranks
+    return candidate_set
 
 
+def art_tcp(coverage):
+    eps = 1.0e-8
+
+    test_num = coverage.shape[0]
+    unit_num = coverage.shape[1]
+
+    remaining_tests = set(list(range(0, test_num)))
+
+    first_test = randrange(test_num)
+    remaining_tests.remove(first_test)
+    added_set_cov = coverage[[first_test]]
+    prioritized = list([first_test])
+
+    while len(remaining_tests) > 0:
+        candidate_set = art_create_candidate_set(coverage, remaining_tests)
+
+        while len(candidate_set) > 0:
+            candidate_set_list = list(candidate_set)
+            if len(candidate_set) == 1:
+                best_test = candidate_set_list[0]
+            else:
+                candidate_set_matrix = coverage[candidate_set_list]
+                dist = euclidean_distances(added_set_cov, candidate_set_matrix)
+
+                assert(dist.shape[0] == len(prioritized))
+                assert(dist.shape[1] == len(candidate_set))
+
+                dist_min = dist.min(axis=0)
+                assert(dist_min.shape[0] == len(candidate_set))
+
+                best_test = candidate_set_list[np.argmax(dist_min)]
+
+            assert(best_test in remaining_tests)
+            assert(best_test in candidate_set)
+
+            prioritized.append(best_test)
+            candidate_set.remove(best_test)
+            remaining_tests.remove(best_test)
+
+            added_set_cov = np.append(added_set_cov, coverage[[best_test]], axis=0)
+        print('len(prioritized): ', len(prioritized))
+
+    assert(len(prioritized) == test_num)
+    return prioritized

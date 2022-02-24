@@ -2,6 +2,7 @@ import numpy as np
 import pandas
 from prioritization import prioritization_std as ps, prioritization_core as pc, prioritization_clustering as pr_cl, \
     prioritization_gclef as pr_gclef
+from prioritization.prioritization_art import art_tcp
 
 
 def generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num):
@@ -69,6 +70,44 @@ def run_standard2_prioritization(project, version_number, filename, alg_prefix):
 
     print()
     f.close()
+
+
+def run_art_prioritization(project, version_number, filename):
+    data_path = "../WTP-data/%s/%d" % (project, version_number)
+
+    coverage, test_names, unit_names = pc.read_coverage_data(data_path)
+    failed_tests_ids = pc.read_failed_tests(data_path, test_names)
+
+    test_num = coverage.shape[0]
+    unit_num = coverage.shape[1]
+    assert (test_num == len(test_names))
+    assert (unit_num == len(unit_names))
+
+    class_of_units, units_in_class, classes = extract_classes_in_data(unit_names, unit_num)
+    class_num = len(classes);
+
+    print("test_num: ", test_num, " unit_num: ", unit_num, " class_num: ", class_num)
+
+    if np.size(failed_tests_ids) == 0:
+        print("No Tests found in coverage values, skipping version")
+        return
+
+    f = open('%s/%s' % (data_path, filename), "w+")
+    f.write("alg,first_fail,apfd\n")
+
+    art_ordering = art_tcp(coverage)
+    art_apfd = pc.rank_evaluation_apfd(art_ordering, failed_tests_ids)
+    print("art_apfd: ", art_apfd)
+
+    art_first_fail = pc.rank_evaluation_first_fail(art_ordering, failed_tests_ids)
+    print("art_first_fail: ", art_first_fail)
+
+    result_line = "art,%f,%f" % (art_first_fail, art_apfd)
+    f.write(result_line + "\n")
+
+    print()
+    f.close()
+
 
 def run_standard2_prioritization_fp(bug_prediction_data, score_label, project, version_number, c_dp_values, filename,
                                     alg_prefix):
