@@ -62,11 +62,11 @@ def compute_clustering_metrics(bug_prediction_data, score_label, project, versio
 
     return metrics_all
 
-def plot_clustering_metrics(data_path, project, version_number, base_alg_name, after_name, metrics, matric_labels, cluster_nums_filter, tcp_results_cluster_nums, dist_functions, dist_complete_names, tcp_to_version, is_fp, output_name):
+def plot_clustering_metrics(data_path, metrics_path, project, version_number, base_alg_name, after_name, metrics, matric_labels, cluster_nums_filter, tcp_results_cluster_nums, dist_functions, dist_complete_names, tcp_to_version, is_fp, output_name):
     first_fail = pd.read_csv(data_path + "/first_fail_all.csv")
     apfd = pd.read_csv(data_path + "/apfd_all.csv")
     vals = first_fail
-    proj_metrics = pd.read_csv('clustering_metrics/1/%s_%d.csv' % (project, version_number))
+    proj_metrics = pd.read_csv(metrics_path+'/%s_%d.csv' % (project, version_number))
 
 #    print(proj_metrics.shape)
 #    print(len(cluster_nums))
@@ -95,6 +95,7 @@ def plot_clustering_metrics(data_path, project, version_number, base_alg_name, a
         axs[0].legend()
         # plt.legend(title='Distance function')
         # plt.ylabel('APFD (%)')
+
         axs[1].set_ylabel('First fail (%)')
         axs[1].grid(axis='x', color='0.95')
         plt.suptitle(project)
@@ -108,3 +109,67 @@ def plot_clustering_metrics(data_path, project, version_number, base_alg_name, a
         fig2.savefig('clustering_metrics/plots/clus_hop5/%s_%s_%s.png' % (output_name, project, metric))
 
         plt.close('all')
+
+
+def plot_clustering_metrics_multi(data_path, metrics_path, output_path, project, version_number, base_alg_name, after_name, metrics,
+                                  matric_labels, metrics_cluster_nums_filter, tcp_results_cluster_nums, dist_functions,
+                                  dist_complete_names, tcp_to_version, is_fp, output_name):
+    first_fail = pd.read_csv(data_path + "/first_fail_all.csv")
+    vals = first_fail
+    proj_metrics = pd.read_csv(metrics_path + '/%s_%d.csv' % (project, version_number))
+
+    #    print(proj_metrics.shape)
+    #    print(len(cluster_nums))
+
+    proj_metrics = proj_metrics[proj_metrics["cluster_num"].isin(metrics_cluster_nums_filter)]
+    cluster_nums = proj_metrics["cluster_num"]
+
+    fig2, axs = plt.subplots(len(metrics)+1, 1, sharex=True)
+    # Remove horizontal space between axes
+    fig2.subplots_adjust(hspace=0)
+
+    axs[0].set_ylabel('First fail (%)')
+    axs[0].grid(axis='x', color='0.95')
+    plt.suptitle(project)
+
+    proj_stats, proj_stats_data = get_project_tcp_results(base_alg_name, after_name, tcp_results_cluster_nums,
+                                                          dist_functions, project,
+                                                          tcp_to_version, vals)
+
+    min_y = 100
+    max_y = 0
+    for (ind_dist, dist) in enumerate(dist_functions):
+        axs[0].plot(proj_stats["Cluster #"], proj_stats[dist], 'o--', label=dist_complete_names[ind_dist])
+        min_y = min(min_y, proj_stats[dist].min())
+        max_y = max(max_y, proj_stats[dist].max())
+
+#    if max_y - min_y > 10:
+    axs[0].set_ylim(max(min_y - 5, 0), max_y + 5);
+#    else:
+#        axs[0].set_ylim(max(min_y - 10, 0), max_y + 10);
+
+    for index, metric in enumerate(metrics):
+#        fig1 = plt.figure()
+#        plt.plot(cluster_nums, proj_metrics[metric], '--', label=metric)
+#        plt.plot(cluster_nums, proj_metrics[metric + '_fp'], '--', label=metric + '_fp')
+#        plt.xticks([2] + list(range(50, 501, 50)))
+#        plt.legend()
+#        fig1.savefig('%s/%s_%s.png' % (output_path, project, metric))
+        if is_fp:
+            axs[index+1].plot(cluster_nums, proj_metrics[metric + '_fp'], '*--', label=matric_labels[index])
+            axs[index + 1].set_xticks([25]+list(range(50, 501, 50)))
+#            axs[index + 1].tick_params(labelrotation=45)
+        else:
+            axs[index+1].plot(cluster_nums, proj_metrics[metric], '*--', label=matric_labels[index])
+            axs[index + 1].set_xticks([25]+list(range(50, 501, 50)))
+
+        axs[index+1].grid(axis='x', color='0.95')
+        axs[index+1].set_ylabel(matric_labels[index])
+        axs[index+1].legend()
+
+        # plt.legend(title='Distance function')
+        # plt.ylabel('APFD (%)')
+
+    fig2.savefig('%s/%s_%s.png' % (output_path, output_name, project))
+
+    plt.close('all')
