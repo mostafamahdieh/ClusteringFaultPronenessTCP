@@ -73,6 +73,16 @@ def is_remaining_coverage_zero(test_used, total_coverage):
     return True
 
 
+def max_prioritization_std(coverage, unit_fp):
+    test_num = coverage.shape[0]
+    unit_num = coverage.shape[1]
+
+    max_dp = np.max(np.multiply(coverage >= 0.05, unit_fp), axis=1)
+    assert (len(max_dp) == test_num)
+
+    return np.flip(np.argsort(max_dp))
+
+
 def additional_prioritization_std(coverage, unit_fp, additional_style):
     test_num = coverage.shape[0]
     unit_num = coverage.shape[1]
