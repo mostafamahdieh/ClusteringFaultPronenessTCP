@@ -32,33 +32,39 @@ def compute_clustering_metrics(bug_prediction_data, score_label, project, versio
     unit_dp = extract_bug_prediction_for_units_version(bug_prediction_data, score_label, class_of_units, class_dp_prob)
 
     metrics_all = []
-
-    if not type(distance_function) is str:
-        distance1 = distance_function(coverage, coverage)
-        print('distance computed.')
-    else:
-        distance1 = distance_function
-
     for cluster_num in cluster_nums:
-        print("cluster_num: ", cluster_num)
+        metrics_all.append([cluster_num])
 
-        metrics = [cluster_num]
-        for c_dp in c_dp_values:
-            print("c_dp: ", c_dp)
-            unit_fp = generate_weighted_unit_fp(c_dp, unit_dp, unit_num)
+    for c_dp in c_dp_values:
+        print("c_dp: ", c_dp)
+        unit_fp = generate_weighted_unit_fp(c_dp, unit_dp, unit_num)
 
-            clusters, clustering, model = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
+        if c_dp != 0:
+            print('adjusting coverage...')
+            coverage = np.multiply(coverage, unit_fp)
+
+        if not type(distance_function) is str:
+            distance1 = distance_function(coverage, coverage)
+            print('distance computed.')
+        else:
+            distance1 = distance_function
+
+        for cluster_ind, cluster_num in enumerate(cluster_nums):
+            print("cluster_num: ", cluster_num)
+
+            clusters, clustering, labels = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
                                                          distance1, linkage, cluster_num, c_dp != 0)
-            labels = clustering.labels_
+            #labels = clustering.labels_
             # retrieve unique clusters
 
-            score_AGclustering_s = silhouette_score(coverage, labels, metric='euclidean')
+            score_AGclustering_s = silhouette_score(coverage, labels)
             score_AGclustering_c = calinski_harabasz_score(coverage, labels)
             score_AGclustering_d = davies_bouldin_score(coverage, labels)
 
             print('Silhouette, Calinski Harabasz, Davies Bouldin Score: %.4f %.4f %.4f' % (score_AGclustering_s, score_AGclustering_c, score_AGclustering_d))
-            metrics = metrics + [score_AGclustering_s, score_AGclustering_c, score_AGclustering_d]
-        metrics_all.append(metrics)
+            metrics_all[cluster_ind] = metrics_all[cluster_ind] + [score_AGclustering_s, score_AGclustering_c, score_AGclustering_d]
+
+    assert(len(metrics_all) == len(cluster_nums))
 
     return metrics_all
 
