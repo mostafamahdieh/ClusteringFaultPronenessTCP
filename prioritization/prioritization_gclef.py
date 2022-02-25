@@ -20,12 +20,12 @@ def create_gclef_clusters(coverage, unit_names, units_in_class, sorted_classes_l
     clusters = [[] for c in range(0, class_num)]
 
     for ind, test in enumerate(nonzero_tests):
-        clusters[nonzero_classes[ind]].append((test, total_weighted_coverage[test]))
+        clusters[nonzero_classes[ind]].append((test, total_weighted_coverage[test], 0))
 
     zero_rows = np.flatnonzero(nonzero_coverage.sum(axis=1) == 0)
     zero_cluster = []
     for ind, test in enumerate(zero_rows):
-        zero_cluster.append((test, total_weighted_coverage[test]))
+        zero_cluster.append((test, total_weighted_coverage[test], 0))
 
     if len(zero_cluster) > 0:
         clusters.append(zero_cluster)
@@ -44,9 +44,9 @@ def tcp_gclef_prioritization(clusters, coverage, inner_alg):
     rearranged_clusters = []
     for cluster_ind in range(0, len(clusters)):
         unique_cluster = []
-        for (test_id, tot_weight) in clusters[cluster_ind]:
+        for (test_id, tot_weight, max_coverage) in clusters[cluster_ind]:
             if test_id not in selected_tests:
-                unique_cluster.append((test_id, tot_weight))
+                unique_cluster.append((test_id, tot_weight, max_coverage))
                 selected_tests.add(test_id)
         print("rearrenging cluster #", cluster_ind, " with size ", len(unique_cluster))
         if inner_alg == 'total':
@@ -66,7 +66,7 @@ def tcp_gclef_prioritization(clusters, coverage, inner_alg):
 
     added_tests = 0
     for cluster in rearranged_clusters:
-        for (test_id, tot_weight) in cluster:
+        for (test_id, tot_weight, max_coverage) in cluster:
             ranks[added_tests] = test_id
             added_tests = added_tests+1
 

@@ -38,7 +38,11 @@ def art_create_candidate_set(coverage, remaining_tests):
 
 
 def art_create_candidate_set2(coverage, remaining_tests):
-    return sample(remaining_tests, 100)
+    sample_size = 100
+    if len(remaining_tests) <= sample_size:
+        return remaining_tests.copy()
+    else:
+        return sample(remaining_tests, 100)
 
 
 def art_tcp(coverage, cand_set_function):
