@@ -9,7 +9,7 @@ import scipy.stats as algorithm_stats
 import itertools as it
 
 
-def algorithm_statistics(projects, data_path, results_path, algorithms, alg_complete_names, to_version):
+def algorithm_statistics(projects, data_path, results_path, algorithms, alg_complete_names, to_version, cluster_nums, cluster_nums_fp):
     algorithm_stats = []
     first_fail = pd.read_csv(data_path + "/first_fail_all.csv")
     apfd = pd.read_csv(data_path + "/apfd_all.csv")
@@ -23,6 +23,12 @@ def algorithm_statistics(projects, data_path, results_path, algorithms, alg_comp
 
         stat = [project]
         for algorithm in algorithms:
+            if 'clus' in algorithm:
+                if 'xgb' in algorithm:
+                    algorithm = algorithm.replace('clus', 'clus'+str(cluster_nums_fp[index]))
+                else:
+                    algorithm = algorithm.replace('clus', 'clus'+str(cluster_nums[index]))
+
             stat.append(vals_proj_mean[algorithm])
 
         print(stat)

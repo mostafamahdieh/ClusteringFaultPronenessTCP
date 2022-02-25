@@ -130,7 +130,7 @@ def is_remaining_coverage_zero(cluster, test_used):
     return True
 
 
-def rearrange_tests_additional(cluster, coverage, unit_fp):
+def rearrange_tests_additional(cluster, coverage, unit_fp, additional_style='decrease'):
     eps = 1e-8
     test_num = coverage.shape[0]
     unit_num = coverage.shape[1]
@@ -162,7 +162,14 @@ def rearrange_tests_additional(cluster, coverage, unit_fp):
         assert best_coverage > -eps, "Coverage (" + str(best_coverage) + ") must not be negative!"
 
         if best_coverage > eps:
-            new_unit_coverage = np.maximum(unit_coverage - coverage[best_test, :], 0)
+            if additional_style == 'decrease':
+                new_unit_coverage = np.maximum(unit_coverage - coverage[best_test, :], 0)
+            elif additional_style == 'zero':
+                new_unit_coverage = unit_coverage.copy()
+                new_unit_coverage[coverage[best_test, :] > eps] = 0
+            else:
+                raise Exception("Bad value for additional_style: " + additional_style)
+
             coverage_diff = (unit_coverage - new_unit_coverage)
             additional_weighted_coverage -= np.matmul(coverage, np.multiply(coverage_diff, unit_fp))
             unit_coverage = new_unit_coverage

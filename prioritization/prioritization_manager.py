@@ -345,14 +345,14 @@ def run_gclef_prioritization(bug_prediction_data, score_label, project, version_
     f = open('%s/%s' % (data_path, filename), "w+")
     f.write("alg,first_fail,apfd\n")
 
-    result_line = "gclef_add_%s,%f,%f" % (alg_prefix, additional_first_fail, additional_apfd)
+    result_line = "%s_add,%f,%f" % (alg_prefix, additional_first_fail, additional_apfd)
     f.write(result_line + "\n")
     print("additional_first_fail: ", additional_first_fail, " additional_apfd: ", additional_apfd)
 
     total_prioritization_ordering = pr_gclef.tcp_gclef_prioritization(clusters, coverage, 'total')
     total_prioritization_apfd = pc.rank_evaluation_apfd(total_prioritization_ordering, failed_tests_ids)
     total_prioritization_first_fail = pc.rank_evaluation_first_fail(total_prioritization_ordering, failed_tests_ids)
-    result_line = "gclef_tot_%s,%f,%f" % (alg_prefix, total_prioritization_first_fail, total_prioritization_apfd)
+    result_line = "%s_tot,%f,%f" % (alg_prefix, total_prioritization_first_fail, total_prioritization_apfd)
     f.write(result_line + "\n")
     print("total_first_fail: ", total_prioritization_first_fail, " total_apfd: ", total_prioritization_apfd)
 

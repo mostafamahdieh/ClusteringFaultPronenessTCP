@@ -1,12 +1,3 @@
-import pandas as pd
-from pandas import Categorical
-import numpy as np
-from numpy import std, mean, sqrt
-import os
-import matplotlib
-import matplotlib.pyplot as plt
-import scipy.stats as algorithm_stats
-import itertools as it
 from results.algorithm_statistics import algorithm_statistics
 
 projects = ['Chart', 'Closure', 'Lang', 'Math', 'Time']
@@ -17,12 +8,17 @@ data_path = './aggregate/main_results'
 results_path = './aggregate/main_results'
 
 algorithms = ['tot_c0', 'add_c0', 'tot_std_xgb_results_14001115_online_c0999', 'add_std_xgb_results_14001115_online_c0999',
-              'gclef_tot_gclef2_xgb_results_14001115_online', 'gclef_add_gclef2_xgb_results_14001115_online',
-              'eucl_fp0_clus100_at', 'eucl_fp0_clus200_at', 'eucl_xgb_results_14001115_online_c0_tt_clus100',
-              'eucl_agg2_xgb14001115_online_c0999_tot_clus100', 'eucl_agg2_xgb14001115_online_c0999_max_clus100']
-alg_complete_names = ['Total', 'Add', 'Total+FP', 'Add+FP',
-                      'Gclef2Tot', 'Gclef2Add',
-                      'CovClusteringAT100', 'CovClusteringAT200', 'CovClusteringTT100',
-                      'CovClusteringAgg2Tot100+FP', 'CovClusteringAgg2Max+FP100']
+              'gclef_tot_gclef2_xgb_results_14001115_online', 'gclef_add_gclef2_xgb_results_14001115_online', 'max_max_xgb_results_14001115_online_c0999',
+              'eucl_fp0_clus_at', 'eucl_agg2_xgb14001115_online_c0999_max_clus']
 
-algorithm_statistics(projects, data_path, results_path, algorithms, alg_complete_names, to_version)
+
+
+alg_complete_names = ['Total', 'Add', 'Total+FP', 'Add+FP',
+                      'Gclef2Tot', 'Gclef2Add', 'Max+FP',
+                      'CovClusteringAT', 'CovClusteringMax+FP']
+
+cluster_nums = [100, 150, 200, 150, 150]
+#cluster_nums = [100, 150, 175, 125, 150]
+cluster_nums_fp = [175, 150, 150, 150, 75]
+
+algorithm_statistics(projects, data_path, results_path, algorithms, alg_complete_names, to_version, cluster_nums, cluster_nums_fp)

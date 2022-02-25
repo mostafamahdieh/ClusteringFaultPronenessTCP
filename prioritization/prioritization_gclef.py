@@ -52,7 +52,7 @@ def tcp_gclef_prioritization(clusters, coverage, inner_alg):
         if inner_alg == 'total':
             rearranged_cluster = pr_cl.rearrange_tests_total(unique_cluster)
         elif inner_alg == 'additional':
-            rearranged_cluster = pr_cl.rearrange_tests_additional(unique_cluster, coverage, np.ones((unit_num,)))
+            rearranged_cluster = pr_cl.rearrange_tests_additional(unique_cluster, coverage, np.ones((unit_num,)), 'zero')
         else:
             raise Exception("Bad value for inner_alg: " + str(inner_alg))
 
