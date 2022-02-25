@@ -151,11 +151,13 @@ def rearrange_tests_additional(cluster, coverage, unit_fp, additional_style='dec
 
         best_coverage = -1
         best_test = None
+        best_max = None
 
         # finding test with most coverage
         for (test_ind, total_coverage, max_coverage) in cluster:
             if not test_used[test_ind] and additional_weighted_coverage[test_ind] > best_coverage:
                 best_test = test_ind
+                best_max = max_coverage
                 best_coverage = additional_weighted_coverage[test_ind]
 
         assert best_coverage != -1, "Didn't find any test (this must not happen)!"
@@ -174,7 +176,7 @@ def rearrange_tests_additional(cluster, coverage, unit_fp, additional_style='dec
             additional_weighted_coverage -= np.matmul(coverage, np.multiply(coverage_diff, unit_fp))
             unit_coverage = new_unit_coverage
             test_used[best_test] = True
-            rearranged_cluster.append((best_test, total_fp_coverage[best_test]))
+            rearranged_cluster.append((best_test, total_fp_coverage[best_test], best_max))
         else:
             additional_weighted_coverage = np.array(total_fp_coverage)
             unit_coverage = np.ones((unit_num,))
