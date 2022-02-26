@@ -360,6 +360,67 @@ def run_gclef_prioritization(bug_prediction_data, score_label, project, version_
     f.close()
 
 
+def run_gclef_random_prioritization(bug_prediction_data, score_label, project, version_number, filename, alg_prefix):
+    data_path = "../WTP-data/%s/%d" % (project, version_number)
+
+    coverage, test_names, unit_names = pc.read_coverage_data(data_path)
+    failed_tests_ids = pc.read_failed_tests(data_path, test_names)
+    if np.size(failed_tests_ids) == 0:
+        print("No Tests found in coverage values, skipping version")
+        return
+
+    test_num = coverage.shape[0]
+    unit_num = coverage.shape[1]
+    assert (test_num == len(test_names))
+    assert (unit_num == len(unit_names))
+
+    class_of_units, units_in_class, classes = extract_classes_in_data(unit_names, unit_num)
+    class_dp_prob = extract_bug_prediction_for_classes(bug_prediction_data, score_label, version_number, classes)
+
+    class_num = len(classes);
+
+    print("test_num: ", test_num, " unit_num: ", unit_num, " class_num: ", class_num)
+
+    assert (len(units_in_class.items()) == class_num)
+    assert (len(class_of_units) == unit_num)
+    print("len(class_dp_prob.items()): ", len(class_dp_prob.items()))
+    #    assert(len(class_dp_prob.items()) == class_num)
+
+    # sort classes in decreasing order of fault-proneness
+    dp_classes = class_dp_prob.items()
+    sorted_classes_list = sorted(dp_classes, key=lambda item: item[1], reverse=True)
+
+    # create clusters of test cases where each cluster covers a class. clusters might have redundant test cases
+    clusters, zero_cluster = pr_gclef.create_gclef_clusters(coverage, unit_names, units_in_class, sorted_classes_list)
+
+    #    print("zero_cluster tests:")
+    for (test_id, test_total_coverage, max_coverage) in zero_cluster:
+        #        if (test_total_coverage >= 0.01)
+        # print("test ", test_names[test_id], " (", test_id ,") with total coverage ", test_total_coverage)
+        test_covers_unknown_classes = False
+        if test_total_coverage >= 1:
+            for u in np.flatnonzero(coverage[test_id] > 0):
+                #        print(unit_names[u], " -> ", coverage[test_id][u], ", is in classes: ",  class_of_units[u], class_of_units[u] in dp_classes)
+                if not class_of_units[u] in dp_classes:
+                    test_covers_unknown_classes = True
+        if not test_covers_unknown_classes:
+            assert (test_total_coverage < 1)
+
+    random_ordering = pr_gclef.tcp_gclef_prioritization(clusters, coverage, 'random')
+    random_apfd = pc.rank_evaluation_apfd(random_ordering, failed_tests_ids)
+    random_first_fail = pc.rank_evaluation_first_fail(random_ordering, failed_tests_ids)
+
+    f = open('%s/%s' % (data_path, filename), "w+")
+    f.write("alg,first_fail,apfd\n")
+
+    result_line = "%s_add,%f,%f" % (alg_prefix, random_first_fail, random_apfd)
+    f.write(result_line + "\n")
+    print("random_first_fail: ", random_first_fail, " random_apfd: ", random_apfd)
+
+    print()
+    f.close()
+
+
 def cluster_sizes(clusters):
     cluster_sizes = []
     for cluster in clusters:

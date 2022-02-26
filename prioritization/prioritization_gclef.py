@@ -1,3 +1,5 @@
+from random import random, shuffle
+
 import numpy as np
 from prioritization import prioritization_clustering as pr_cl
 
@@ -48,11 +50,14 @@ def tcp_gclef_prioritization(clusters, coverage, inner_alg):
             if test_id not in selected_tests:
                 unique_cluster.append((test_id, tot_weight, max_coverage))
                 selected_tests.add(test_id)
-        print("rearrenging cluster #", cluster_ind, " with size ", len(unique_cluster))
+#        print("rearrenging cluster #", cluster_ind, " with size ", len(unique_cluster))
         if inner_alg == 'total':
             rearranged_cluster = pr_cl.rearrange_tests_total(unique_cluster)
         elif inner_alg == 'additional':
             rearranged_cluster = pr_cl.rearrange_tests_additional(unique_cluster, coverage, np.ones((unit_num,)), 'zero')
+        elif inner_alg == 'random':
+            rearranged_cluster = unique_cluster.copy()
+            shuffle(rearranged_cluster)
         else:
             raise Exception("Bad value for inner_alg: " + str(inner_alg))
 
