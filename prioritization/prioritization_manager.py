@@ -4,7 +4,7 @@ import numpy as np
 import pandas
 from prioritization import prioritization_std as ps, prioritization_core as pc, prioritization_clustering as pr_cl, \
     prioritization_gclef as pr_gclef
-from prioritization.prioritization_art import art_tcp, art_tcp_fast
+from prioritization.prioritization_art import art_tcp, art_tcp_cache, art_tcp_distance
 
 
 def generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num):
@@ -105,12 +105,12 @@ def run_art_prioritization(project, version_number, filename, cand_set_function,
     for sample in range(random_sample_num):
         seed(sample*10)
 
-        if mode == 'fast':
-            art_ordering = art_tcp_fast(coverage, cand_set_function)
+        if mode == 'cache':
+            art_ordering = art_tcp_cache(coverage, cand_set_function)
         elif mode == 'simple':
             art_ordering = art_tcp(coverage, distance_function, cand_set_function)
         elif mode == 'precomputed':
-            art_ordering = art_tcp_distance(distance, distance_function, cand_set_function)
+            art_ordering = art_tcp_distance(coverage, distance, cand_set_function)
 
         art_apfd = pc.rank_evaluation_apfd(art_ordering, failed_tests_ids)
         art_apfds.append(art_apfd)
