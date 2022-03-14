@@ -123,8 +123,11 @@ def run_art_prioritization(project, version_number, filename, cand_set_function,
     art_apfds_arr = np.array(art_apfds)
 
     result_line = alg_shortname+"_mean,%f,%f" % (np.mean(art_first_fails_arr), np.mean(art_apfds_arr))
-    result_line = alg_shortname+"_std,%f,%f" % (np.std(art_first_fails_arr), np.std(art_apfds_arr))
+    print(result_line)
+    f.write(result_line + "\n")
 
+    result_line = alg_shortname+"_std,%f,%f" % (np.std(art_first_fails_arr), np.std(art_apfds_arr))
+    print(result_line)
     f.write(result_line + "\n")
 
     print()
