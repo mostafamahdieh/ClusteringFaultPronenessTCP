@@ -74,7 +74,7 @@ def run_standard2_prioritization(project, version_number, filename, alg_prefix):
     f.close()
 
 
-def run_art_prioritization(project, version_number, filename, cand_set_function, alg_shortname, random_sample_num, fast_art=False):
+def run_art_prioritization(project, version_number, filename, cand_set_function, distance_function, alg_shortname, random_sample_num, mode):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
@@ -100,13 +100,17 @@ def run_art_prioritization(project, version_number, filename, cand_set_function,
     art_apfds = []
     art_first_fails = []
 
+    distance = distance_function(coverage, coverage)
+
     for sample in range(random_sample_num):
         seed(sample*10)
 
-        if fast_art:
+        if mode == 'fast':
             art_ordering = art_tcp_fast(coverage, cand_set_function)
-        else:
-            art_ordering = art_tcp(coverage, cand_set_function)
+        elif mode == 'simple':
+            art_ordering = art_tcp(coverage, distance_function, cand_set_function)
+        elif mode == 'precomputed':
+            art_ordering = art_tcp_distance(distance, distance_function, cand_set_function)
 
         art_apfd = pc.rank_evaluation_apfd(art_ordering, failed_tests_ids)
         art_apfds.append(art_apfd)
