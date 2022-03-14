@@ -37,11 +37,11 @@ def art_create_candidate_set(coverage, remaining_tests):
 
 
 def art_create_candidate_set2(coverage, remaining_tests):
-    sample_size = 100
+    sample_size = 50
     if len(remaining_tests) <= sample_size:
         return remaining_tests.copy()
     else:
-        return sample(remaining_tests, 100)
+        return sample(remaining_tests, 50)
 
 
 def art_tcp(coverage, distance_function, cand_set_function):
@@ -84,7 +84,7 @@ def art_tcp(coverage, distance_function, cand_set_function):
             remaining_tests.remove(best_test)
 
             added_set_cov = np.append(added_set_cov, coverage[[best_test]], axis=0)
-        print('len(prioritized): ', len(prioritized))
+        #print('len(prioritized): ', len(prioritized))
 
     assert(len(prioritized) == test_num)
     return prioritized
@@ -159,7 +159,7 @@ def art_tcp_cache(coverage, distance_function, cand_set_function):
             candidate_set.remove(best_candidate_test)
             remaining_tests.remove(best_candidate_test)
 
-        print('len(prioritized): ', len(prioritized))
+        #print('len(prioritized): ', len(prioritized))
 
     assert(len(prioritized) == test_num)
     return prioritized

@@ -104,6 +104,7 @@ def run_art_prioritization(project, version_number, filename, cand_set_function,
 
     for sample in range(random_sample_num):
         seed(sample*10)
+        print('running sample ',sample)
 
         if mode == 'cache':
             art_ordering = art_tcp_cache(coverage, cand_set_function)
