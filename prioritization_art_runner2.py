@@ -8,5 +8,5 @@ to_version = [26, 133, 65, 106, 26]
 for index, project in enumerate(projects):
     for version_number in range(from_version[index], to_version[index] + 1):
         print("* Version %d" % version_number)
-        run_art_prioritization(project, version_number, 'art2.csv', art_create_candidate_set2, 'art2', 10, False)
+        run_art_prioritization(project, version_number, 'art2_rnd.csv', art_create_candidate_set2, 'art2', 100, False)
         print()
