@@ -12,8 +12,9 @@ results_path = './aggregate/main_results'
  #               'eucl_fp0_clus_at', 'eucl_agg2_xgb14001115_online_c0999_max_clus']
 
 algorithms = ['tot_c0', 'add_c0', 'tot_std_xgb_results_14001115_online_c0999', 'add_std_xgb_results_14001115_online_c0999',
-              'gclef_add_gclef2_xgb_results_14001115_online', 'gclef3_xgb_results_14001115_online_tot', 'gclef3_xgb_results_14001115_online_add', 'max_max_xgb_results_14001115_online_c0999',
-              'eucl_fp0_clus_at', 'eucl_agg2_xgb14001115_online_c0999_max_clus']
+              'gclef_tot_gclef2_xgb_results_14001115_online', 'gclef_add_gclef2_xgb_results_14001115_online', 'gclef3_xgb_results_14001115_online_tot', 'gclef3_xgb_results_14001115_online_add', 'gclef_random_xgb_results_14001115_online_add',
+              'art', 'art2',
+              'max_max_xgb_results_14001115_online_c0999', 'eucl_fp0_clus_at', 'eucl_agg2_xgb14001115_online_c0999_max_clus']
 
 
 
@@ -21,8 +22,9 @@ algorithms = ['tot_c0', 'add_c0', 'tot_std_xgb_results_14001115_online_c0999', '
 
 
 alg_complete_names = ['Total', 'Add', 'Total+FP', 'Add+FP',
-                      'Gclef2Add', 'Gclef3Tot', 'Gclef3Add', 'Max+FP',
-                      'CovClusteringAT', 'CovClusteringMax+FP']
+                      'Gclef2Tot', 'Gclef2Add', 'Gclef3Tot', 'Gclef3Add', 'GclefRand',
+                      'ART', 'ART2',
+                      'Max+FP', 'CovClusteringAT', 'CovClusteringMax+FP']
 
 cluster_nums = [100, 150, 200, 150, 150]
 #cluster_nums = [100, 150, 175, 125, 150]

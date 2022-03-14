@@ -1,8 +1,10 @@
+from random import seed
+
 import numpy as np
 import pandas
 from prioritization import prioritization_std as ps, prioritization_core as pc, prioritization_clustering as pr_cl, \
     prioritization_gclef as pr_gclef
-from prioritization.prioritization_art import art_tcp
+from prioritization.prioritization_art import art_tcp, art_tcp_fast
 
 
 def generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num):
@@ -72,7 +74,7 @@ def run_standard2_prioritization(project, version_number, filename, alg_prefix):
     f.close()
 
 
-def run_art_prioritization(project, version_number, filename, cand_set_function):
+def run_art_prioritization(project, version_number, filename, cand_set_function, alg_shortname, random_sample_num, fast_art=False):
     data_path = "../WTP-data/%s/%d" % (project, version_number)
 
     coverage, test_names, unit_names = pc.read_coverage_data(data_path)
@@ -95,14 +97,33 @@ def run_art_prioritization(project, version_number, filename, cand_set_function)
     f = open('%s/%s' % (data_path, filename), "w+")
     f.write("alg,first_fail,apfd\n")
 
-    art_ordering = art_tcp(coverage, cand_set_function)
-    art_apfd = pc.rank_evaluation_apfd(art_ordering, failed_tests_ids)
-    print("art_apfd: ", art_apfd)
+    art_apfds = []
+    art_first_fails = []
 
-    art_first_fail = pc.rank_evaluation_first_fail(art_ordering, failed_tests_ids)
-    print("art_first_fail: ", art_first_fail)
+    for sample in range(random_sample_num):
+        seed(sample*10)
 
-    result_line = "art,%f,%f" % (art_first_fail, art_apfd)
+        if fast_art:
+            art_ordering = art_tcp_fast(coverage, cand_set_function)
+        else:
+            art_ordering = art_tcp(coverage, cand_set_function)
+
+        art_apfd = pc.rank_evaluation_apfd(art_ordering, failed_tests_ids)
+        art_apfds.append(art_apfd)
+
+        art_first_fail = pc.rank_evaluation_first_fail(art_ordering, failed_tests_ids)
+        art_first_fails.append(art_first_fail)
+
+        print("art_apfd: ", art_apfd)
+        print("art_first_fail: ", art_first_fail)
+
+
+    art_first_fails_arr = np.array(art_first_fails)
+    art_apfds_arr = np.array(art_apfds)
+
+    result_line = alg_shortname+"_mean,%f,%f" % (np.mean(art_first_fails_arr), np.mean(art_apfds_arr))
+    result_line = alg_shortname+"_std,%f,%f" % (np.std(art_first_fails_arr), np.std(art_apfds_arr))
+
     f.write(result_line + "\n")
 
     print()
