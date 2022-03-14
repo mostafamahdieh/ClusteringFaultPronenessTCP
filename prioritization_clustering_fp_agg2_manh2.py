@@ -8,9 +8,9 @@ from prioritization.prioritization_clustering import clustering_agg2
 from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.metrics.pairwise import cosine_distances
 
-projects = ['Closure', 'Lang', 'Math', 'Time']
+projects = ['Closure']
 from_version = [12, 1, 1, 1, 1]
-to_version = [133, 65, 106, 26]
+to_version = [12, 65, 106, 26]
 #to_version = [26, 133, 65, 106, 27]
 
 

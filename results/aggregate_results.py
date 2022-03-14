@@ -22,7 +22,7 @@ def aggregate_results(file_names, projects, from_version, to_version, results_pa
             results_dict_apfd = {'version': version_number, 'project': project}
             skipped = False
 
-            for file_name in file_names:
+            for (file_index, file_name) in enumerate(file_names):
                 file_path = '%s/%s' % (data_path, file_name)
 
                 if os.path.isfile(file_path):
@@ -44,7 +44,9 @@ def aggregate_results(file_names, projects, from_version, to_version, results_pa
                         results_dict_apfd[alg] = row['apfd']
                 else:
                     print("Skipping %s" % file_path)
+                    assert(file_index == 0) 
                     skipped = True
+                    break
 
             if not skipped:
                 first_fail = first_fail.append(results_dict_first_fail, ignore_index=True)
