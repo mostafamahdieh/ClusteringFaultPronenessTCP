@@ -100,15 +100,18 @@ def run_art_prioritization(project, version_number, filename, cand_set_function,
     art_apfds = []
     art_first_fails = []
 
-    distance = distance_function(coverage, coverage)
+    if mode == 'precomputed':
+        print("computing distance function...")
+        distance = distance_function(coverage, coverage)
+        print("distance function computed.")
 
     for sample in range(random_sample_num):
         seed(sample*10)
         print('running sample ',sample)
 
         if mode == 'cache':
-            art_ordering = art_tcp_cache(coverage, cand_set_function)
-        elif mode == 'simple':
+            art_ordering = art_tcp_cache(coverage, distance_function, cand_set_function)
+        elif mode == 'normal':
             art_ordering = art_tcp(coverage, distance_function, cand_set_function)
         elif mode == 'precomputed':
             art_ordering = art_tcp_distance(coverage, distance, cand_set_function)
