@@ -106,7 +106,7 @@ def run_art_prioritization(project, version_number, filename, cand_set_function,
         print("distance function computed.")
 
     for sample in range(random_sample_num):
-        seed(sample*10)
+        seed(version_number*1234+sample*5)
         print('running sample ',sample)
 
         if mode == 'cache':
