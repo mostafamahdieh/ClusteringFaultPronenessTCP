@@ -4,7 +4,7 @@ import numpy as np
 import pandas
 from prioritization import prioritization_std as ps, prioritization_core as pc, prioritization_clustering as pr_cl, \
     prioritization_gclef as pr_gclef
-from prioritization.prioritization_art import art_tcp, art_tcp_cache, art_tcp_distance
+from prioritization.prioritization_art import art_tcp, art_tcp_cache, art_tcp_distance, art_tcp_cache_distance
 
 
 def generate_weighted_unit_fp(c_dp, dp_unit_prob, unit_num):
@@ -100,7 +100,7 @@ def run_art_prioritization(project, version_number, filename, cand_set_function,
     art_apfds = []
     art_first_fails = []
 
-    if mode == 'precomputed':
+    if mode == 'precomputed' or mode == 'cache-precomputed':
         print("computing distance function...")
         distance = distance_function(coverage, coverage)
         print("distance function computed.")
@@ -111,6 +111,8 @@ def run_art_prioritization(project, version_number, filename, cand_set_function,
 
         if mode == 'cache':
             art_ordering = art_tcp_cache(coverage, distance_function, cand_set_function)
+        elif mode == 'cache-precomputed':
+            art_ordering = art_tcp_cache_distance(coverage, distance, cand_set_function)
         elif mode == 'normal':
             art_ordering = art_tcp(coverage, distance_function, cand_set_function)
         elif mode == 'precomputed':

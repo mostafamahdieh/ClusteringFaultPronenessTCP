@@ -36,6 +36,7 @@ def art_create_candidate_set(coverage, remaining_tests):
             retried = retried + 1
             continue
 
+    print("candidate set created with size: ", len(candidate_set))
     return candidate_set
 
 
@@ -146,6 +147,58 @@ def art_tcp_cache(coverage, distance_function, cand_set_function):
 
                         candidate_dist = min(candidate_dist, d)
 
+                        if candidate_dist <= best_candidate_dist:
+                            break
+
+                    if candidate_dist > best_candidate_dist:
+                        best_candidate_test = candidate_test
+                        best_candidate_dist = candidate_dist
+
+            # print("best_candidate_test: ", best_candidate_test)
+
+            assert(best_candidate_test in remaining_tests)
+            assert(best_candidate_test in candidate_set)
+
+            prioritized.append(best_candidate_test)
+            candidate_set.remove(best_candidate_test)
+            remaining_tests.remove(best_candidate_test)
+
+        print('len(prioritized): ', len(prioritized))
+
+    assert(len(prioritized) == test_num)
+    return prioritized
+
+
+def art_tcp_cache_distance(coverage, distance, cand_set_function):
+    eps = 1.0e-8
+    inf = 1.0e100
+
+    test_num = coverage.shape[0]
+    unit_num = coverage.shape[1]
+
+    remaining_tests = set(list(range(0, test_num)))
+
+    first_test = randrange(test_num)
+    remaining_tests.remove(first_test)
+    prioritized = list([first_test])
+
+    while len(remaining_tests) > 0:
+        candidate_set = cand_set_function(coverage, remaining_tests)
+
+        while len(candidate_set) > 0:
+            candidate_set_list = list(candidate_set)
+            if len(candidate_set) == 1:
+                best_candidate_test = candidate_set_list[0]
+            else:
+                best_candidate_dist = -1
+                best_candidate_test = None
+
+                last_prioritized = prioritized[len(prioritized)-1]
+
+                for candidate_test in candidate_set_list:
+                    candidate_dist = inf
+                    for src in prioritized:
+                        candidate_dist = min(candidate_dist, distance[src][candidate_test])
                         if candidate_dist <= best_candidate_dist:
                             break
 
