@@ -514,7 +514,7 @@ def run_prioritization_clustering_fp(bug_prediction_data, score_label, project, 
             clusters, clustering, labels = pr_cl.create_clusters(coverage, unit_dp, unit_fp, clustering_method,
                                                          distance, linkage, cluster_num, c_dp != 0)
 
-            print("cluster_sizes: ", cluster_sizes(clusters))
+#            print("cluster_sizes: ", cluster_sizes(clusters))
 
 
             for inner_prioritization in inner_prioritizations:
@@ -562,7 +562,7 @@ def run_prioritization_clustering(project, version_number, clustering_method, di
         clusters, clustering, labels = pr_cl.create_clusters(coverage, unit_fp, unit_fp, clustering_method,
                                                      distance1, linkage, cluster_num, False)
         
-        print("cluster_sizes: ", cluster_sizes(clusters))
+#        print("cluster_sizes: ", cluster_sizes(clusters))
 
         ranks = pr_cl.tcp_clustering_inner_outer(clusters, coverage, unit_fp, 'additional', 'total')
         first_fail = pc.rank_evaluation_first_fail(ranks, failed_tests_ids)
