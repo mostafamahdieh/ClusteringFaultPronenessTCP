@@ -24,10 +24,10 @@ This package is used in multiple steps: defect prediction, prioritization and re
     source ./venv/bin/activate
     pip3 install -r requirements.txt
     ```
-5. Defect prediction: The defect prediction step can be executed using the bugprediction_runner.py script as follows. This script runs the bug prediction step for the specific versions of all projects.
+5. Defect prediction: The defect prediction step can be executed using the defect_prediction_xgboost_cv script as follows. This script runs the defect prediction step for the specific versions of all projects.
     ```
-    cd bugprediction
-    python3 -u bugprediction_runner.py
+    cd defect_prediction
+    python3 -u defect_prediction_xgboost_cv.py
     ```
 
 6. CovClustering Test case prioritization: The prioritization_clustering_nofp_runner.py script is used to execute the CovClustering TCP method, which is one of the proposed methods presented in the introduction. This method does not use fault-proneness and is solely based on coverage using a clustering method to diversify test cases.
