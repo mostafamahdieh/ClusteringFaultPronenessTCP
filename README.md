@@ -30,16 +30,21 @@ This package is used in multiple steps: defect prediction, prioritization and re
     python3 -u bugprediction_runner.py
     ```
 
-6. Test case prioritization: The prioritization_runner.py script is used to execute the traditional and fault-proneness based TCP methods. The total and additional strategies are executed in both the traditional and fault-proneness based methods.
+6. CovClustering Test case prioritization: The prioritization_clustering_nofp_runner.py script is used to execute the CovClustering TCP method, which is one of the proposed methods presented in the introduction. This method does not use fault-proneness and is solely based on coverage using a clustering method to diversify test cases.
     ```
-    cd ../prioritization
-    python3 -u prioritization_runner.py
+    python3 -u prioritization_clustering_nofp_runner.py
     ```
 
-7. Aggregating the results: The results are aggregated using the aggregate_results.py script:
+
+7. CovClustering+FP Test case prioritization: The prioritization_clustering_fp_runner.py script is used to execute the CovClustering+FP TCP method, which is the proposed method presented in the introduction which utilizes fault-proneness results.
     ```
-    cd ../results
-    python3 -u aggregate_results.py
+    python3 -u prioritization_clustering_fp_runner.py
+    ```
+
+
+8. Aggregating the results: The results are aggregated using the aggregate_results_runner_main_results.py script:
+    ```
+    python3 -u aggregate_results_runner_main_results.py
     ```
 
 ## Citing in academic work
