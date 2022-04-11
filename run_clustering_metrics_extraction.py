@@ -16,7 +16,7 @@ to_version = [1, 1, 1, 1, 1]
 
 
 for index, project in enumerate(projects):
-    bug_prediction_data_path = 'defect_prediction_results/xgb_results_14001115_online/' + project + '.csv'
+    bug_prediction_data_path = 'defect_prediction_results/xgb_results_online/' + project + '.csv'
     print("Reading " + bug_prediction_data_path)
     bug_prediction_data = pd.read_csv(bug_prediction_data_path)
     print("done.")
@@ -25,5 +25,5 @@ for index, project in enumerate(projects):
 
         metrics = compute_clustering_metrics(bug_prediction_data, 'xgb_score_online', project, version_number, clustering_agg2, euclidean_distances, 'average', cluster_nums, [0, 0.999])
 
-        proj_stats = pd.DataFrame(columns=['cluster_num', 'silhouette', 'calinski', 'davies','silhouette_fp', 'calinski_fp', 'davies_fp'], data=metrics)
+        proj_stats = pd.DataFrame(columns=['cluster_num', 'silhouette', 'calinski', 'davies', 'silhouette_fp', 'calinski_fp', 'davies_fp'], data=metrics)
         proj_stats.to_csv('clustering_metrics2/%s_%d.csv' % (project, version_number))

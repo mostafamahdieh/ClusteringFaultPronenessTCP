@@ -91,19 +91,6 @@ def run_clustering(cluster_num, coverage, distance_function, linkage_crit):
     return model, labels
 
 
-def clustering_agg3(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
-    print("Running agglomerative clustering (cluster_num = %d)..." % (cluster_num))
-
-    if use_fp:
-        unit_num = coverage.shape[1]
-        coverage = np.multiply(coverage, 0.01 * np.ones((unit_num,)) + 0.99 * unit_dp)
-
-    clustering, model = run_clustering(cluster_num, coverage, distance_function, linkage_crit)
-
-    print("Clustering finished.")
-    return clustering, model
-
-
 def clustering_agg_nonprecomputed(coverage, unit_dp, unit_fp, distance_function, linkage_crit, cluster_num, use_fp):
     print("Running agglomerative clustering (distance = %s, linkage = %s, cluster_num = %d)..." % (
     distance_function, linkage_crit, cluster_num))

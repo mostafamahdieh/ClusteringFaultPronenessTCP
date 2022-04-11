@@ -71,6 +71,8 @@ def get_project_tcp_results(base_alg_name, after_name, cluster_nums, dist_functi
                 stat = stat + [vals_proj_mean["add_c0"]] * len(dist_functions)
             elif base_alg_name in ["_xgb_results_14001115_online_c0_tt_clus"]:
                 stat = stat + [vals_proj_mean["tot_c0"]] * len(dist_functions)
+            elif base_alg_name in ["_agg2_xgb14001115_online_c0999_max_clus"]:
+                stat = stat + [vals_proj_mean["eucl_agg2_xgb14001115_online_c0999_max_clus1"]] * len(dist_functions)
         else:
             for dist in dist_functions:
                 # print("dist: ", dist)
