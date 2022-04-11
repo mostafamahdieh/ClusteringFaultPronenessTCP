@@ -16,7 +16,7 @@ to_version = [21, 128, 60, 101, 22]
 data_path = './aggregate/main_results'
 output_path = './aggregate/compare_clustering_agg2_max_with_fp'
 
-cluster_nums = list(range(50,501,50))
+cluster_nums = [1]+list(range(50,501,50))
 dist_functions = ['eucl', 'cosd', 'manh']
 dist_complete_names = ['Euclidean', 'Manhattan', 'Cosine']
 base_algorithmname = '_agg2_xgb14001115_online_c0999_max_clus'
