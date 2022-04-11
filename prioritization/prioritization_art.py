@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from random import random, randrange, sample
 
 
@@ -20,7 +21,7 @@ def art_create_candidate_set(coverage, remaining_tests):
     candidate_set = set()
 
     retried = 0
-    while len(remaining_tests) > 0 and retried < 50:
+    while len(remaining_tests) > 0 and retried < 5:
         test = sample(remaining_tests, 1)[0]
         test_coverage = additional_weighted_coverage[test]
 
@@ -36,12 +37,16 @@ def art_create_candidate_set(coverage, remaining_tests):
             retried = retried + 1
             continue
 
+    if len(candidate_set)<100:
+        candidate_set.update(sample(remaining_tests, min(len(remaining_tests),100-len(candidate_set))))
+
     print("candidate set created with size: ", len(candidate_set))
     return candidate_set
 
 
 def art_create_candidate_set2(coverage, remaining_tests):
-    sample_size = 50
+    test_num = coverage.shape[0]
+    sample_size = math.floor(test_num/20)
     if len(remaining_tests) <= sample_size:
         return remaining_tests.copy()
     else:
